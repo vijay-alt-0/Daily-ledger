@@ -1,0 +1,2087 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Daily Ledger</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#B4443E">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ledger">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icon-16.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1ECE1;
+    --paper-2:#EAE3D4;
+    --ink:#22283B;
+    --ink-soft:#454C64;
+    --rule:#C79A96;
+    --rule-strong:#B4443E;
+    --pencil:#8B8578;
+    --green:#4C7A5E;
+    --green-bg:#E1EAE2;
+    --amber:#D9A441;
+    --amber-bg:#F6E9D0;
+    --card:#FBF8F1;
+    --shadow: 0 1px 0 rgba(34,40,59,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 34px,
+        rgba(180,68,62,0.09) 34px, rgba(180,68,62,0.09) 35px
+      ),
+      var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:80px;
+  }
+  .margin-rule{
+    position:fixed; top:0; bottom:0; left:38px;
+    width:1px; background:rgba(180,68,62,0.35);
+    z-index:0;
+  }
+  .wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding:22px 20px 20px 56px;
+    position:relative;
+    z-index:1;
+  }
+  .stamp{
+    position:absolute; top:14px; right:16px;
+    text-align:right;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--pencil);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:5px 9px;
+    background:var(--card);
+    line-height:1.6;
+  }
+  .install-btn{
+    position:absolute; top:52px; right:16px;
+    display:flex; align-items:center; gap:2px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px; font-weight:700;
+    color:var(--rule-strong);
+    border:1px solid var(--rule);
+    border-radius:12px;
+    padding:3px 8px 3px 6px;
+    background:var(--amber-bg);
+    cursor:pointer;
+    line-height:1;
+  }
+  .install-btn-icon{ font-size:11px; }
+  .install-btn:active{ transform:scale(0.94); }
+  header.top{
+    padding-top:6px;
+    margin-bottom:6px;
+  }
+  .kicker{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--rule-strong);
+    text-transform:uppercase;
+    font-weight:700;
+  }
+  h1{
+    font-family:'JetBrains Mono',monospace;
+    font-size:28px;
+    font-weight:800;
+    margin:2px 0 18px;
+    letter-spacing:-0.01em;
+  }
+  .section{
+    margin-top:34px;
+  }
+  .section-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .section-num{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:13px;
+    color:var(--rule-strong);
+    background:var(--amber-bg);
+    border:1px solid var(--rule);
+    border-radius:3px;
+    padding:2px 7px;
+  }
+  .section-title{
+    font-family:'JetBrains Mono',monospace;
+    font-size:16px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .section-sub{
+    font-size:12.5px;
+    color:var(--pencil);
+    margin:-6px 0 14px 0;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid rgba(34,40,59,0.10);
+    border-radius:8px;
+    box-shadow:var(--shadow);
+    padding:14px 14px;
+    margin-bottom:12px;
+  }
+
+  /* Section 1: projects */
+  .project{
+    margin-bottom:14px;
+  }
+  .project-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:8px;
+  }
+  .project-name{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:700;
+    font-size:14.5px;
+  }
+  .project-actions button{
+    font-size:11px;
+  }
+  .task-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 4px;
+    border-top:1px dashed rgba(34,40,59,0.12);
+  }
+  .task-row:first-of-type{border-top:none;}
+  .task-name{
+    flex:1;
+    font-size:14px;
+    font-weight:500;
+  }
+  .task-name.done{
+    color:var(--green);
+    text-decoration:line-through;
+    text-decoration-color:rgba(76,122,94,0.5);
+  }
+  .tally{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;
+    color:var(--ink-soft);
+    min-width:56px;
+    text-align:right;
+  }
+  .tally.complete{color:var(--green); font-weight:700;}
+  .counter-btn{
+    width:34px; height:34px;
+    border-radius:7px;
+    border:1px solid var(--rule);
+    background:var(--amber-bg);
+    color:var(--rule-strong);
+    font-family:'JetBrains Mono',monospace;
+    font-weight:800;
+    font-size:16px;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:transform .06s ease;
+  }
+  .counter-btn:active{transform:scale(0.92);}
+  .check-btn{
+    width:26px; height:26px;
+    border-radius:6px;
+    border:1.5px solid var(--pencil);
+    background:transparent;
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    color:transparent;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .check-btn.checked{
+    background:var(--green-bg);
+    border-color:var(--green);
+    color:var(--green);
+  }
+
+  .add-row{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+  }
+  input[type=text], input[type=number]{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:8px 10px;
+    border:1px solid rgba(34,40,59,0.18);
+    border-radius:6px;
+    background:#fff;
+    color:var(--ink);
+    flex:1;
+    min-width:0;
+  }
+  input::placeholder{color:#B3AB9C;}
+  .btn{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    font-weight:700;
+    padding:8px 12px;
+    border-radius:6px;
+    border:1px solid var(--rule-strong);
+    background:var(--rule-strong);
+    color:#fff;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .btn.ghost{
+    background:transparent;
+    color:var(--rule-strong);
+  }
+  .btn.small{
+    padding:5px 9px;
+    font-size:10.5px;
+  }
+  .btn.subtle{
+    background:transparent;
+    border-color:transparent;
+    color:var(--pencil);
+    padding:4px 6px;
+  }
+  .new-project-toggle{
+    font-family:'JetBrains Mono',monospace;
+    font-size:12px;
+    color:var(--rule-strong);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:4px 0;
+    font-weight:700;
+  }
+  .new-project-form{
+    display:none;
+    flex-direction:column;
+    gap:8px;
+    margin-top:10px;
+    padding:12px;
+    border:1px dashed var(--rule);
+    border-radius:8px;
+    background:var(--paper-2);
+  }
+  .new-project-form.open{display:flex;}
+  .subtask-list{display:flex; flex-direction:column; gap:6px;}
+  .subtask-input-row{display:flex; gap:6px; align-items:center;}
+  .subtask-input-row input[type=text]{flex:2;}
+  .subtask-input-row input[type=number]{flex:1; max-width:80px;}
+  .subtask-input-row .rm{
+    background:none;border:none;color:var(--pencil);cursor:pointer;font-size:16px;padding:0 4px;
+  }
+
+  /* modal for "how much completed" */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(34,40,59,0.45);
+    display:none; align-items:center; justify-content:center; z-index:50;
+    padding:20px;
+  }
+  .modal-overlay.open{display:flex;}
+  .modal{
+    background:var(--card);
+    border-radius:10px;
+    padding:20px;
+    width:100%; max-width:320px;
+    border:1px solid rgba(34,40,59,0.1);
+  }
+  .modal h3{
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px; margin:0 0 4px;
+  }
+  .modal p{font-size:12.5px; color:var(--pencil); margin:0 0 14px;}
+  .modal-btn-row{display:flex; flex-direction:column; gap:8px;}
+  .modal-btn{
+    padding:10px; border-radius:7px; border:1px solid var(--rule);
+    background:var(--amber-bg); font-family:'JetBrains Mono',monospace;
+    font-weight:700; font-size:13px; cursor:pointer; color:var(--ink);
+  }
+  .modal-num-row{display:flex; gap:8px; margin-top:4px;}
+
+  /* Section 2: daily tasks */
+  .daily-item{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 4px;
+    border-top:1px dashed rgba(34,40,59,0.12);
+  }
+  .daily-item:first-of-type{border-top:none;}
+  .daily-text{flex:1; font-size:14px; font-weight:500;}
+  .daily-text.done{color:var(--green); text-decoration:line-through; text-decoration-color:rgba(76,122,94,0.5);}
+  .remind-badge{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    color:var(--rule-strong);
+    background:var(--amber-bg);
+    border:1px solid var(--rule);
+    border-radius:10px;
+    padding:2px 7px;
+    white-space:nowrap;
+  }
+  .remind-toggle{
+    display:flex; align-items:center; gap:6px;
+    font-size:11px; color:var(--pencil);
+  }
+  .switch{
+    width:32px; height:18px; border-radius:10px;
+    background:#D8D2C3; position:relative; cursor:pointer; flex-shrink:0;
+    border:1px solid rgba(34,40,59,0.15);
+  }
+  .switch.on{background:var(--green);}
+  .switch::after{
+    content:''; position:absolute; top:1px; left:1px;
+    width:14px; height:14px; border-radius:50%; background:#fff;
+    transition:left .15s ease;
+    box-shadow:0 1px 2px rgba(0,0,0,0.2);
+  }
+  .switch.on::after{left:15px;}
+  .reminder-settings{
+    display:none;
+    gap:8px; margin-top:8px; padding:10px;
+    background:var(--paper-2); border-radius:7px;
+    font-size:12px; align-items:center; flex-wrap:wrap;
+  }
+  .reminder-settings.open{display:flex;}
+  .reminder-settings input[type=number]{width:60px; flex:none;}
+  .reminder-settings label{color:var(--pencil); font-size:11.5px;}
+
+  /* Section 3: today special */
+  .special-item{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 4px;
+    border-top:1px dashed rgba(34,40,59,0.12);
+  }
+  .special-item:first-of-type{border-top:none;}
+
+  /* Section 4: future */
+  .future-group{margin-bottom:16px;}
+  .future-group-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px; color:var(--rule-strong); font-weight:700;
+    text-transform:uppercase; letter-spacing:.05em;
+    margin-bottom:6px;
+  }
+  .future-item{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 4px;
+    border-top:1px dashed rgba(34,40,59,0.12);
+    font-size:13.5px;
+  }
+  .future-item:first-of-type{border-top:none;}
+  .future-offset-row{
+    display:flex; gap:6px; margin-top:10px; flex-wrap:wrap;
+  }
+  .chip{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    padding:6px 10px;
+    border-radius:14px;
+    border:1px solid var(--rule);
+    background:transparent;
+    color:var(--rule-strong);
+    cursor:pointer;
+  }
+  .chip.active{background:var(--rule-strong); color:#fff;}
+
+  .empty{
+    font-size:12.5px; color:var(--pencil); font-style:italic; padding:6px 4px;
+  }
+
+  .rm-x{
+    background:none; border:none; color:var(--pencil); cursor:pointer;
+    font-size:15px; padding:2px 4px; flex-shrink:0;
+  }
+
+  footer.note{
+    max-width:640px; margin:40px auto 0; padding:0 20px 0 56px;
+    font-size:11.5px; color:var(--pencil); line-height:1.6;
+  }
+
+  @media (max-width:420px){
+    .wrap{padding-left:44px;}
+    footer.note{padding-left:44px;}
+    .margin-rule{left:26px;}
+    h1{font-size:23px;}
+  }
+
+  /* ---- Page-level tabs (Today / Progress Tracker) ---- */
+  .page-tabs{
+    display:flex; gap:8px; margin:4px 0 20px;
+    border-bottom:2px solid rgba(34,40,59,0.12);
+  }
+  .page-tab{
+    font-family:'JetBrains Mono',monospace; font-size:13px; font-weight:700;
+    padding:9px 4px; margin-bottom:-2px;
+    border:none; border-bottom:2px solid transparent;
+    background:transparent; color:var(--pencil); cursor:pointer;
+  }
+  .page-tab.active{ color:var(--rule-strong); border-bottom-color:var(--rule-strong); }
+  .page{ display:none; }
+  .page.active{ display:block; }
+
+  /* ---- Progress tracker sub-tabs ---- */
+  .tabs{
+    display:flex; gap:6px; flex-wrap:wrap; margin-bottom:20px;
+    border-bottom:1px solid rgba(34,40,59,0.12); padding-bottom:12px;
+  }
+  .tab{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+    padding:7px 13px; border-radius:14px; border:1px solid var(--rule);
+    background:transparent; color:var(--rule-strong); cursor:pointer;
+  }
+  .tab.active{ background:var(--rule-strong); color:#fff; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .summary-row{ display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
+  .stat{
+    flex:1; min-width:110px; background:var(--card); border:1px solid rgba(34,40,59,0.1);
+    border-radius:8px; padding:12px 14px;
+  }
+  .stat .num{ font-family:'JetBrains Mono',monospace; font-size:22px; font-weight:800; color:var(--rule-strong); }
+  .stat .label{ font-size:11px; color:var(--pencil); text-transform:uppercase; letter-spacing:.04em; margin-top:2px; }
+
+  .day-block{ margin-bottom:14px; }
+  .day-label{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+    color:var(--rule-strong); text-transform:uppercase; letter-spacing:.05em;
+    margin-bottom:8px; display:flex; align-items:center; gap:8px;
+  }
+  .day-label .today-badge{
+    background:var(--amber-bg); border:1px solid var(--rule); border-radius:10px;
+    padding:1px 8px; font-size:9.5px;
+  }
+  .proj-name{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; margin:10px 0 6px; }
+  .task-line{ display:flex; align-items:center; gap:10px; padding:6px 0; font-size:13.5px; }
+  .task-line .tname{ flex:1; }
+  .task-line .tname.done{ color:var(--green); }
+  .bar-wrap{
+    width:90px; height:8px; background:var(--paper-2); border-radius:5px; overflow:hidden;
+    border:1px solid rgba(34,40,59,0.08); flex-shrink:0;
+  }
+  .bar-fill{ height:100%; background:var(--green); border-radius:5px; }
+  .bar-fill.partial{ background:var(--amber); }
+  .tnum{ font-family:'JetBrains Mono',monospace; font-size:11.5px; color:var(--pencil); min-width:52px; text-align:right; }
+  .check-icon{ width:16px; text-align:center; font-size:13px; color:var(--green); flex-shrink:0; }
+  .check-icon.no{ color:var(--pencil); opacity:.4; }
+  .future-date{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--rule-strong); min-width:60px; }
+
+  /* ---- Timer page ---- */
+  .timer-card{
+    background:var(--card); border:1px solid rgba(34,40,59,0.1);
+    border-radius:8px; box-shadow:var(--shadow); padding:16px; margin-bottom:12px;
+  }
+  .timer-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .timer-name{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; }
+  .timer-link-tag{
+    font-size:10.5px; color:var(--rule-strong); background:var(--amber-bg);
+    border:1px solid var(--rule); border-radius:10px; padding:2px 8px; display:inline-block; margin-top:4px;
+  }
+  .timer-display{
+    font-family:'JetBrains Mono',monospace; font-size:34px; font-weight:800;
+    color:var(--ink); text-align:center; margin:10px 0; letter-spacing:.02em;
+  }
+  .timer-display.countdown-warn{ color:var(--rule-strong); }
+  .timer-controls{ display:flex; gap:8px; justify-content:center; }
+  .timer-controls button{
+    font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700;
+    padding:8px 16px; border-radius:6px; border:1px solid var(--rule);
+    background:var(--amber-bg); color:var(--rule-strong); cursor:pointer;
+  }
+  .timer-controls button.primary{ background:var(--rule-strong); color:#fff; }
+  .hist-row{
+    display:flex; align-items:center; gap:10px; padding:8px 0;
+    border-top:1px dashed rgba(34,40,59,0.12); font-size:13px;
+  }
+  .hist-row:first-of-type{ border-top:none; }
+  .hist-row .hname{ flex:1; }
+  .hist-row .hdur{ font-family:'JetBrains Mono',monospace; color:var(--pencil); font-size:12px; }
+  .hist-row .hdate{ font-family:'JetBrains Mono',monospace; color:var(--pencil); font-size:10.5px; min-width:70px; }
+
+  /* ---- Calendar page ---- */
+  .cal-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+  .cal-nav-btn{
+    width:32px; height:32px; border-radius:7px; border:1px solid var(--rule);
+    background:var(--amber-bg); color:var(--rule-strong); font-size:16px; font-weight:800;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .cal-month-label{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px; }
+  .cal-weekdays{
+    display:grid; grid-template-columns:repeat(7,1fr); text-align:center;
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--pencil);
+    margin-bottom:4px;
+  }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+  .cal-cell{
+    aspect-ratio:1; border-radius:7px; border:1px solid rgba(34,40,59,0.08);
+    background:var(--card); display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; padding:2px; position:relative; min-height:38px;
+  }
+  .cal-cell.empty-cell{ background:transparent; border:none; cursor:default; }
+  .cal-cell.is-today{ border:1.5px solid var(--rule-strong); }
+  .cal-cell.selected{ background:var(--amber-bg); }
+  .cal-cell .cal-daynum{ font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600; }
+  .cal-cell .cal-dots{ display:flex; gap:2px; margin-top:2px; flex-wrap:wrap; justify-content:center; max-width:28px; }
+  .dot{ width:5px; height:5px; border-radius:50%; display:inline-block; }
+  .dot-proj{ background:var(--rule-strong); }
+  .dot-daily{ background:var(--green); }
+  .dot-special{ background:var(--amber); }
+  .dot-future{ background:#6C7A9C; }
+  .dot-timer{ background:#8B5FBF; }
+  .dot-note{ background:#454C64; }
+  .cal-legend{
+    display:flex; gap:12px; flex-wrap:wrap; margin-top:14px; padding-top:10px;
+    border-top:1px solid rgba(34,40,59,0.1); font-size:10.5px; color:var(--pencil); align-items:center;
+  }
+  .cal-legend span{ display:flex; align-items:center; gap:4px; }
+
+  .cal-detail-date{
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:14px; margin-bottom:10px;
+  }
+  .cal-detail-group{ margin-bottom:12px; }
+  .cal-detail-label{
+    font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--pencil);
+    text-transform:uppercase; letter-spacing:.04em; margin-bottom:4px;
+  }
+  .cal-detail-item{ font-size:13px; padding:3px 0; display:flex; align-items:center; gap:6px; }
+  .export-btn{
+    font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700;
+    padding:6px 12px; border-radius:6px; border:1px solid var(--rule);
+    background:transparent; color:var(--rule-strong); cursor:pointer; margin-top:8px;
+    text-decoration:none; display:inline-block;
+  }
+</style>
+</head>
+<body>
+<div class="margin-rule"></div>
+<div class="wrap">
+  <div class="stamp" id="stamp">PAGE 01<br>DATE: --</div>
+  <button id="installBtn" class="install-btn" onclick="triggerInstall()" title="Install app" style="display:none;">
+    <span class="install-btn-icon">⬇</span><span class="install-btn-txt">IN</span>
+  </button>
+  <header class="top">
+    <div class="kicker">Core</div>
+    <h1>Daily Ledger</h1>
+  </header>
+
+  <div class="page-tabs">
+    <button class="page-tab active" data-page="today" onclick="switchPage('today')">Today</button>
+    <button class="page-tab" data-page="timer" onclick="switchPage('timer')">Timer</button>
+    <button class="page-tab" data-page="calendar" onclick="switchPage('calendar')">Calendar</button>
+    <button class="page-tab" data-page="progress" onclick="switchPage('progress')">Progress Tracker</button>
+  </div>
+
+  <div class="page active" id="page-today">
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">01</span>
+      <span class="section-title">Progress Tracking</span>
+    </div>
+    <div class="section-sub">Set a project, add tasks with a rep count (or none for a plain check-off).</div>
+
+    <div id="projects"></div>
+
+    <button class="new-project-toggle" onclick="toggleNewProject()">+ New project / task group</button>
+    <div class="new-project-form" id="newProjectForm">
+      <input type="text" id="npName" placeholder="Project name (optional) — e.g. Boxing">
+      <div class="subtask-list" id="npSubtasks"></div>
+      <div class="subtask-input-row">
+        <input type="text" id="npTaskName" placeholder="Task name — e.g. Jab">
+        <input type="number" id="npTaskLimit" placeholder="Limit (opt.)">
+        <button class="btn small ghost" onclick="addSubtaskDraft()">Add</button>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:4px;">
+        <button class="btn" onclick="saveNewProject()">Save project</button>
+        <button class="btn subtle" onclick="toggleNewProject()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">02</span>
+      <span class="section-title">Daily Task</span>
+    </div>
+    <div class="section-sub">Recurring habits. Toggle reminders to get nudged until done.</div>
+    <div class="card">
+      <div id="dailyList"></div>
+      <div class="add-row">
+        <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
+        <button class="btn" onclick="addDaily()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">03</span>
+      <span class="section-title">Today Special</span>
+    </div>
+    <div class="section-sub">One-off tasks that only matter today.</div>
+    <div class="card">
+      <div id="specialList"></div>
+      <div class="add-row">
+        <input type="text" id="specialInput" placeholder="e.g. Pick up dry cleaning" onkeydown="if(event.key==='Enter')addSpecial()">
+        <button class="btn" onclick="addSpecial()">Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">04</span>
+      <span class="section-title">Future Task</span>
+    </div>
+    <div class="section-sub">Schedule something for a later day. It'll surface into Today Special when its day comes.</div>
+    <div class="card">
+      <div id="futureList"></div>
+      <div class="add-row">
+        <input type="text" id="futureInput" placeholder="e.g. Book venue call">
+      </div>
+      <div class="future-offset-row" id="futureChips"></div>
+      <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+        <label style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--pencil);">or pick a date:</label>
+        <input type="date" id="futureDateInput" onchange="onFutureDatePicked()">
+      </div>
+      <div style="margin-top:10px;">
+        <button class="btn" onclick="addFuture()">Schedule task</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 5: Manuscript (optional daily notes) -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">05</span>
+      <span class="section-title">Manuscript</span>
+    </div>
+    <div class="section-sub">Optional. A free note for today — how it went, what happened, anything on your mind.</div>
+    <div class="card">
+      <textarea id="manuscriptInput" placeholder="Nothing written yet — totally optional." rows="4"
+        style="width:100%; font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.5; padding:10px 12px;
+        border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff; color:var(--ink);
+        resize:vertical; box-sizing:border-box;" oninput="onManuscriptInput()"></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+        <span id="manuscriptStatus" style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--pencil);"></span>
+      </div>
+    </div>
+  </div>
+  </div><!-- /page-today -->
+
+  <div class="page" id="page-timer">
+    <div class="section-sub" style="margin-bottom:16px;">Set a countdown or stopwatch, optionally linked to a task from Today or Future Tasks. When it ends, you'll be asked what to do with the linked task.</div>
+
+    <div class="card">
+      <div class="section-title" style="font-size:13px; margin-bottom:10px;">New Timer</div>
+      <div class="add-row" style="margin-bottom:8px;">
+        <input type="text" id="timerLabel" placeholder="Timer name — e.g. Boxing warm-up">
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:10px;">
+        <button class="chip active" id="modeCountdownBtn" onclick="setTimerMode('countdown')">Countdown</button>
+        <button class="chip" id="modeStopwatchBtn" onclick="setTimerMode('stopwatch')">Stopwatch</button>
+      </div>
+      <div id="countdownFields" style="display:flex; gap:8px; margin-bottom:10px; align-items:center;">
+        <input type="number" id="timerMin" placeholder="Min" min="0" style="max-width:80px;">
+        <span style="color:var(--pencil); font-size:12px;">min</span>
+        <input type="number" id="timerSec" placeholder="Sec" min="0" max="59" style="max-width:80px;">
+        <span style="color:var(--pencil); font-size:12px;">sec</span>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--pencil); display:block; margin-bottom:6px;">Link to a task (optional)</label>
+        <select id="timerLinkSelect" style="width:100%; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff; color:var(--ink);">
+          <option value="">No linked task</option>
+        </select>
+      </div>
+      <button class="btn" onclick="createTimer()">Start Timer</button>
+    </div>
+
+    <div class="section" style="margin-top:24px;">
+      <div class="section-head">
+        <span class="section-title" style="font-size:14px;">Running</span>
+      </div>
+      <div id="activeTimers"></div>
+    </div>
+
+    <div class="section" style="margin-top:24px;">
+      <div class="section-head">
+        <span class="section-title" style="font-size:14px;">Timer History</span>
+      </div>
+      <div id="timerHistoryList"></div>
+    </div>
+  </div><!-- /page-timer -->
+
+  <div class="page" id="page-calendar">
+    <div class="section-sub" style="margin-bottom:14px;">Every section's activity in one place. Tap a day to see details and export it to your phone's calendar.</div>
+
+    <div class="card">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="calShiftMonth(-1)">‹</button>
+        <span class="cal-month-label" id="calMonthLabel"></span>
+        <button class="cal-nav-btn" onclick="calShiftMonth(1)">›</button>
+      </div>
+      <div class="cal-weekdays">
+        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+      <div class="cal-legend">
+        <span><i class="dot dot-proj"></i> Project</span>
+        <span><i class="dot dot-daily"></i> Daily</span>
+        <span><i class="dot dot-special"></i> Special</span>
+        <span><i class="dot dot-future"></i> Future</span>
+        <span><i class="dot dot-timer"></i> Timer</span>
+        <span><i class="dot dot-note"></i> Note</span>
+      </div>
+    </div>
+
+    <div class="card" id="calDayDetail">
+      <div class="empty">Tap a day above to see its activity.</div>
+    </div>
+  </div><!-- /page-calendar -->
+
+  <div class="page" id="page-progress">
+    <div class="tabs">
+      <button class="tab active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+      <button class="tab" data-tab="ptab-projects" onclick="switchTab('ptab-projects')">Projects</button>
+      <button class="tab" data-tab="ptab-daily" onclick="switchTab('ptab-daily')">Daily Tasks</button>
+      <button class="tab" data-tab="ptab-special" onclick="switchTab('ptab-special')">Today Special</button>
+      <button class="tab" data-tab="ptab-future" onclick="switchTab('ptab-future')">Future</button>
+    </div>
+
+    <div class="tab-panel active" id="tabpanel-overview">
+      <div class="summary-row" id="summaryStats"></div>
+      <div id="overviewList"></div>
+    </div>
+    <div class="tab-panel" id="tabpanel-ptab-projects">
+      <div id="projectsHistory"></div>
+    </div>
+    <div class="tab-panel" id="tabpanel-ptab-daily">
+      <div id="dailyHistory"></div>
+    </div>
+    <div class="tab-panel" id="tabpanel-ptab-special">
+      <div id="specialHistory"></div>
+    </div>
+    <div class="tab-panel" id="tabpanel-ptab-future">
+      <div id="futureHistoryList"></div>
+    </div>
+  </div><!-- /page-progress -->
+</div>
+
+<footer class="note">
+  Stored locally in this browser only — data won't sync across devices and clears if site data is cleared. Numeric-limit tasks ask "Full" or a specific number when you check them off. Reminders shown here are in-app only while this page is open (no OS push notifications from a browser prototype).
+</footer>
+
+<!-- Modal: how much completed -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Mark complete</h3>
+    <p>How much did you complete?</p>
+    <div class="modal-btn-row">
+      <button class="modal-btn" onclick="confirmFull()">1 — Full (<span id="modalLimit"></span>)</button>
+      <div class="modal-num-row">
+        <input type="number" id="modalNum" placeholder="Enter number completed">
+        <button class="btn small" onclick="confirmNum()">Set</button>
+      </div>
+      <button class="btn subtle small" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic confirm/alert modal (replaces native confirm()/alert() which in-app browsers can silently dismiss) -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal">
+    <p id="confirmMessage" style="margin:0 0 16px; font-size:14px; color:var(--ink);"></p>
+    <div class="modal-btn-row" id="confirmButtons"></div>
+  </div>
+</div>
+
+<!-- Timer finished -> what to do with linked task -->
+<div class="modal-overlay" id="timerDoneOverlay">
+  <div class="modal">
+    <h3 id="timerDoneTitle">Timer finished</h3>
+    <p id="timerDoneMsg">What should happen to the linked task?</p>
+    <div class="modal-btn-row" id="timerDoneButtons"></div>
+  </div>
+</div>
+
+<script>
+// ---------- State ----------
+let state = JSON.parse(JSON.stringify({
+  projects: [],
+  daily: [],
+  special: [],
+  future: [],
+  history: {},      // dayKey -> { projects:[{name, tasks:[{name,limit,progress,done}]}], daily:[{text,done}], special:[{text,done}] }
+  lastSeenDay: null,
+  timers: [],        // active/paused timers: {id, label, mode:'countdown'|'stopwatch', totalSeconds, remainingSeconds/elapsedSeconds, running, linkedTaskId, linkedTaskLabel, linkedTaskKind}
+  timerLog: [],        // completed sessions: {id, label, mode, durationSeconds, completedAt, linkedTaskLabel, action}
+  notes: {}          // dayKey -> free text note for that day (optional, one per day)
+}));
+
+function load(){
+  try{
+    const raw = localStorage.getItem('ledger_state_v1');
+    if(raw){
+      const saved = JSON.parse(raw);
+      // Merge onto defaults so older saved data (from before history tracking existed)
+      // doesn't wipe out fields it never had, like history/lastSeenDay.
+      state = Object.assign({
+        projects: [], daily: [], special: [], future: [], history: {}, lastSeenDay: null, timers: [], timerLog: [], notes: {}
+      }, saved);
+      if(!state.history || typeof state.history !== 'object') state.history = {};
+      if(!state.notes || typeof state.notes !== 'object') state.notes = {};
+      if(!Array.isArray(state.projects)) state.projects = [];
+      if(!Array.isArray(state.daily)) state.daily = [];
+      if(!Array.isArray(state.special)) state.special = [];
+      if(!Array.isArray(state.future)) state.future = [];
+      if(!Array.isArray(state.timers)) state.timers = [];
+      if(!Array.isArray(state.timerLog)) state.timerLog = [];
+      // Timers can't keep running across a page reload (no background execution in a static page),
+      // so any timer that was running gets paused on load rather than silently losing time.
+      state.timers.forEach(t => { t.running = false; });
+    }
+  }catch(e){ console.warn('load failed', e); }
+}
+function save(){
+  try{ localStorage.setItem('ledger_state_v1', JSON.stringify(state)); }
+  catch(e){ console.warn('save failed', e); }
+}
+function uid(){ return Math.random().toString(36).slice(2,9); }
+
+// ---------- Generic confirm/alert modal (replaces native confirm()/alert()) ----------
+function showConfirmModal(message, onConfirm){
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmButtons').innerHTML = `
+    <button class="modal-btn" id="confirmYesBtn">Yes, remove it</button>
+    <button class="btn subtle small" id="confirmNoBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('confirmYesBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+    onConfirm();
+  };
+  document.getElementById('confirmNoBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+}
+function showAlertModal(message){
+  document.getElementById('confirmMessage').textContent = message;
+  document.getElementById('confirmButtons').innerHTML = `
+    <button class="modal-btn" id="alertOkBtn">OK</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('alertOkBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+}
+
+// ---------- Stamp ----------
+function renderStamp(){
+  const d = new Date();
+  const dateStr = (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();
+  document.getElementById('stamp').innerHTML = 'PAGE 01<br>DATE: '+dateStr;
+}
+
+// ---------- Section 1: Projects ----------
+let draftSubtasks = [];
+
+function toggleNewProject(){
+  const f = document.getElementById('newProjectForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')){
+    draftSubtasks = [];
+    document.getElementById('npName').value='';
+    document.getElementById('npTaskName').value='';
+    document.getElementById('npTaskLimit').value='';
+    renderDraftSubtasks();
+  }
+}
+function addSubtaskDraft(){
+  const name = document.getElementById('npTaskName').value.trim();
+  const limitRaw = document.getElementById('npTaskLimit').value;
+  if(!name) return;
+  draftSubtasks.push({
+    id: uid(), name,
+    limit: limitRaw ? parseInt(limitRaw,10) : null,
+    progress: 0, done:false
+  });
+  document.getElementById('npTaskName').value='';
+  document.getElementById('npTaskLimit').value='';
+  document.getElementById('npTaskName').focus();
+  renderDraftSubtasks();
+}
+function renderDraftSubtasks(){
+  const el = document.getElementById('npSubtasks');
+  if(draftSubtasks.length===0){ el.innerHTML = '<div class="empty">No tasks added yet</div>'; return; }
+  el.innerHTML = draftSubtasks.map((t,i)=>`
+    <div class="subtask-input-row">
+      <span style="flex:2;font-size:13px;">${escapeHtml(t.name)}${t.limit?' <span style="color:var(--pencil)">x'+t.limit+'</span>':''}</span>
+      <button class="rm" onclick="removeDraftSubtask(${i})">×</button>
+    </div>
+  `).join('');
+}
+function removeDraftSubtask(i){ draftSubtasks.splice(i,1); renderDraftSubtasks(); }
+function saveNewProject(){
+  const name = document.getElementById('npName').value.trim();
+  if(draftSubtasks.length===0){ showAlertModal('Add at least one task first.'); return; }
+  state.projects.push({ id: uid(), name: name || null, tasks: draftSubtasks });
+  save(); renderProjects(); toggleNewProject();
+}
+
+function renderProjects(){
+  const el = document.getElementById('projects');
+  if(state.projects.length===0){ el.innerHTML = '<div class="empty">No projects yet. Add one below.</div>'; return; }
+  el.innerHTML = state.projects.map(p => `
+    <div class="card project" data-pid="${p.id}">
+      <div class="project-head">
+        <span class="project-name">${p.name ? escapeHtml(p.name) : 'Tasks'}</span>
+        <div class="project-actions">
+          <button class="btn small subtle" onclick="deleteProject('${p.id}')">Remove</button>
+        </div>
+      </div>
+      ${p.tasks.map(t => renderTaskRow(p.id, t)).join('')}
+    </div>
+  `).join('');
+}
+
+function timerRecordBadge(kind, id){
+  const records = timerRecordsForTask(kind, id);
+  if(records.length===0) return '';
+  const totalSec = records.reduce((sum,r)=>sum+r.durationSeconds,0);
+  return `<span class="timer-link-tag" title="${records.length} timer session(s) logged">⏱ ${fmtTime(totalSec)}</span>`;
+}
+
+function renderTaskRow(pid, t){
+  if(t.limit){
+    const complete = t.progress >= t.limit;
+    return `
+      <div class="task-row">
+        <span class="task-name ${complete?'done':''}">${escapeHtml(t.name)}</span>
+        ${timerRecordBadge('project', t.id)}
+        <span class="tally ${complete?'complete':''}">${t.progress}/${t.limit}</span>
+        ${t.progress>0?`<button class="counter-btn" style="background:transparent;color:var(--pencil);border-color:var(--pencil);" onclick="stepDown('${pid}','${t.id}')">−</button>`:''}
+        <button class="counter-btn" onclick="openLimitModal('${pid}','${t.id}')">${complete?'✓':'+'}</button>
+      </div>
+    `;
+  } else {
+    return `
+      <div class="task-row">
+        <button class="check-btn ${t.done?'checked':''}" onclick="toggleSimpleTask('${pid}','${t.id}')">${t.done?'✓':''}</button>
+        <span class="task-name ${t.done?'done':''}">${escapeHtml(t.name)}</span>
+        ${timerRecordBadge('project', t.id)}
+      </div>
+    `;
+  }
+}
+
+function findTask(pid, tid){
+  const p = state.projects.find(p=>p.id===pid);
+  if(!p) return {};
+  const t = p.tasks.find(t=>t.id===tid);
+  return {p,t};
+}
+
+function toggleSimpleTask(pid, tid){
+  const {t} = findTask(pid,tid);
+  if(!t) return;
+  t.done = !t.done;
+  save(); renderProjects();
+}
+
+function stepDown(pid, tid){
+  const {t} = findTask(pid,tid);
+  if(!t) return;
+  t.progress = Math.max(0, t.progress - 1);
+  save(); renderProjects();
+}
+
+let modalCtx = null;
+function openLimitModal(pid, tid){
+  const {t} = findTask(pid,tid);
+  if(!t) return;
+  if(t.progress >= t.limit){
+    // already complete -> offer undo instead of destructive reset
+    showConfirmModal('This task is complete. Undo (mark as not done)?', ()=>{
+      t.progress = Math.max(0, t.limit - 1); save(); renderProjects();
+    });
+    return;
+  }
+  modalCtx = {pid,tid};
+  document.getElementById('modalTitle').textContent = t.name;
+  document.getElementById('modalLimit').textContent = t.limit;
+  document.getElementById('modalNum').value = t.progress || '';
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+  modalCtx = null;
+}
+function confirmFull(){
+  if(!modalCtx) return;
+  const {t} = findTask(modalCtx.pid, modalCtx.tid);
+  t.progress = t.limit;
+  save(); renderProjects(); closeModal();
+}
+function confirmNum(){
+  if(!modalCtx) return;
+  const val = parseInt(document.getElementById('modalNum').value,10);
+  if(isNaN(val) || val<0) return;
+  const {t} = findTask(modalCtx.pid, modalCtx.tid);
+  t.progress = Math.min(val, t.limit);
+  save(); renderProjects(); closeModal();
+}
+function deleteProject(pid){
+  showConfirmModal('Remove this project and all its tasks?', ()=>{
+    state.projects = state.projects.filter(p=>p.id!==pid);
+    save(); renderProjects();
+  });
+}
+
+// ---------- Section 2: Daily tasks ----------
+function addDaily(){
+  const input = document.getElementById('dailyInput');
+  const text = input.value.trim();
+  if(!text) return;
+  state.daily.push({
+    id: uid(), text, done:false,
+    remind:false, startHour:8, endHour:21, everyHours:2
+  });
+  input.value='';
+  save(); renderDaily();
+}
+function renderDaily(){
+  const el = document.getElementById('dailyList');
+  if(state.daily.length===0){ el.innerHTML = '<div class="empty">No daily tasks yet.</div>'; return; }
+  el.innerHTML = state.daily.map(d => `
+    <div class="daily-item">
+      <button class="check-btn ${d.done?'checked':''}" onclick="toggleDaily('${d.id}')">${d.done?'✓':''}</button>
+      <span class="daily-text ${d.done?'done':''}">${escapeHtml(d.text)}</span>
+      ${timerRecordBadge('daily', d.id)}
+      ${d.remind?'<span class="remind-badge">REMIND</span>':''}
+      <div class="switch ${d.remind?'on':''}" onclick="toggleRemind('${d.id}')"></div>
+      <button class="rm-x" onclick="deleteDaily('${d.id}')">×</button>
+    </div>
+    <div class="reminder-settings ${d.remind?'open':''}" id="rs-${d.id}">
+      <label>Between</label>
+      <input type="number" min="0" max="23" value="${d.startHour}" onchange="updateReminder('${d.id}','startHour',this.value)">
+      <label>and</label>
+      <input type="number" min="0" max="23" value="${d.endHour}" onchange="updateReminder('${d.id}','endHour',this.value)">
+      <label>every</label>
+      <input type="number" min="1" max="12" value="${d.everyHours}" onchange="updateReminder('${d.id}','everyHours',this.value)">
+      <label>hrs</label>
+    </div>
+  `).join('');
+}
+function toggleDaily(id){
+  const d = state.daily.find(d=>d.id===id);
+  d.done = !d.done;
+  save(); renderDaily();
+}
+function toggleRemind(id){
+  const d = state.daily.find(d=>d.id===id);
+  d.remind = !d.remind;
+  save(); renderDaily();
+}
+function updateReminder(id, field, val){
+  const d = state.daily.find(d=>d.id===id);
+  d[field] = parseInt(val,10);
+  save();
+}
+function deleteDaily(id){
+  state.daily = state.daily.filter(d=>d.id!==id);
+  save(); renderDaily();
+}
+
+// in-app reminder loop (browser tab must be open)
+setInterval(()=>{
+  const now = new Date();
+  const hour = now.getHours();
+  state.daily.forEach(d=>{
+    if(d.remind && !d.done && hour>=d.startHour && hour<=d.endHour){
+      if(!d._lastPing || (Date.now()-d._lastPing) >= d.everyHours*3600*1000){
+        d._lastPing = Date.now();
+        if(Notification && Notification.permission==='granted'){
+          new Notification('Reminder', {body: d.text});
+        }
+      }
+    }
+  });
+}, 60000);
+if(window.Notification && Notification.permission==='default'){
+  // ask quietly, non-blocking
+  Notification.requestPermission().catch(()=>{});
+}
+
+// ---------- Section 3: Today Special ----------
+function addSpecial(){
+  const input = document.getElementById('specialInput');
+  const text = input.value.trim();
+  if(!text) return;
+  state.special.push({id: uid(), text, done:false, addedToday: dayKey()});
+  input.value='';
+  save(); renderSpecial();
+}
+function renderSpecial(){
+  const el = document.getElementById('specialList');
+  const todays = state.special.filter(s => s.addedToday === dayKey());
+  if(todays.length===0){ el.innerHTML = '<div class="empty">Nothing special added for today.</div>'; return; }
+  el.innerHTML = todays.map(s => `
+    <div class="special-item">
+      <button class="check-btn ${s.done?'checked':''}" onclick="toggleSpecial('${s.id}')">${s.done?'✓':''}</button>
+      <span class="daily-text ${s.done?'done':''}" style="flex:1;">${escapeHtml(s.text)}</span>
+      ${timerRecordBadge('special', s.id)}
+      <button class="rm-x" onclick="deleteSpecial('${s.id}')">×</button>
+    </div>
+  `).join('');
+}
+function toggleSpecial(id){
+  const s = state.special.find(s=>s.id===id);
+  s.done = !s.done;
+  save(); renderSpecial();
+}
+function deleteSpecial(id){
+  state.special = state.special.filter(s=>s.id!==id);
+  save(); renderSpecial();
+}
+function dayKey(d=new Date()){
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+// Snapshot yesterday's state into history, then reset daily-cycle items.
+// Runs once per load/interval check — only acts when the calendar day has actually changed.
+function checkDayRollover(){
+  const today = dayKey();
+  if(state.lastSeenDay === null){
+    state.lastSeenDay = today;
+    save();
+    return;
+  }
+  if(state.lastSeenDay === today) return; // same day, nothing to do
+
+  const prevDay = state.lastSeenDay;
+
+  // Archive snapshot of the previous day
+  state.history[prevDay] = {
+    projects: state.projects.map(p => ({
+      name: p.name,
+      tasks: p.tasks.map(t => ({
+        name: t.name, limit: t.limit,
+        progress: t.limit ? t.progress : null,
+        done: t.limit ? (t.progress >= t.limit) : t.done
+      }))
+    })),
+    daily: state.daily.map(d => ({ text: d.text, done: d.done })),
+    special: state.special.filter(s => s.addedToday === prevDay).map(s => ({ text: s.text, done: s.done }))
+  };
+
+  // Reset daily-cycle progress for the new day (projects & daily habits repeat each day)
+  state.projects.forEach(p => p.tasks.forEach(t => { t.progress = 0; t.done = false; }));
+  state.daily.forEach(d => { d.done = false; });
+
+  // Drop special items from before today (history already has them archived)
+  state.special = state.special.filter(s => s.addedToday === today);
+
+  state.lastSeenDay = today;
+  save();
+}
+
+// ---------- Section 4: Future tasks ----------
+let selectedOffset = 1;
+let pickedDate = null; // explicit date overrides chip offset when set
+function renderFutureChips(){
+  const el = document.getElementById('futureChips');
+  const opts = [
+    {label:'Tomorrow', val:1},
+    {label:'2d later', val:2},
+    {label:'3d later', val:3},
+    {label:'1 week', val:7},
+  ];
+  el.innerHTML = opts.map(o=>`<button class="chip ${(!pickedDate && o.val===selectedOffset)?'active':''}" onclick="selectOffset(${o.val})">${o.label}</button>`).join('');
+}
+function selectOffset(v){ selectedOffset = v; pickedDate = null; document.getElementById('futureDateInput').value=''; renderFutureChips(); }
+function onFutureDatePicked(){
+  const val = document.getElementById('futureDateInput').value;
+  pickedDate = val || null;
+  renderFutureChips();
+}
+function addFuture(){
+  const input = document.getElementById('futureInput');
+  const text = input.value.trim();
+  if(!text) return;
+  let target;
+  if(pickedDate){
+    const [y,m,d] = pickedDate.split('-').map(Number);
+    target = new Date(y, m-1, d);
+  } else {
+    target = new Date();
+    target.setDate(target.getDate() + selectedOffset);
+  }
+  state.future.push({id: uid(), text, dueKey: dayKey(target), dueLabel: target.toLocaleDateString(undefined,{month:'short',day:'numeric'})});
+  input.value='';
+  document.getElementById('futureDateInput').value='';
+  pickedDate = null;
+  save(); renderFuture(); renderFutureChips();
+}
+function renderFuture(){
+  // promote any due-today future tasks into special
+  const today = dayKey();
+  const due = state.future.filter(f=>f.dueKey===today);
+  if(due.length){
+    due.forEach(f=>{
+      state.special.push({id: uid(), text: f.text, done:false, addedToday: today});
+    });
+    state.future = state.future.filter(f=>f.dueKey!==today);
+    save();
+    renderSpecial();
+  }
+  const el = document.getElementById('futureList');
+  if(state.future.length===0){ el.innerHTML = '<div class="empty">No future tasks scheduled.</div>'; return; }
+  // group by dueKey
+  const groups = {};
+  state.future.slice().sort((a,b)=>a.dueKey.localeCompare(b.dueKey)).forEach(f=>{
+    (groups[f.dueLabel] = groups[f.dueLabel]||[]).push(f);
+  });
+  el.innerHTML = Object.entries(groups).map(([label, items])=>`
+    <div class="future-group">
+      <div class="future-group-label">${label}</div>
+      ${items.map(f=>`
+        <div class="future-item">
+          <span style="flex:1;">${escapeHtml(f.text)}</span>
+          <button class="rm-x" onclick="deleteFuture('${f.id}')">×</button>
+        </div>
+      `).join('')}
+    </div>
+  `).join('');
+}
+function deleteFuture(id){
+  state.future = state.future.filter(f=>f.id!==id);
+  save(); renderFuture();
+}
+
+// ---------- utils ----------
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+// ---------- Page switching (Today / Timer / Progress Tracker) ----------
+function switchPage(name){
+  document.querySelectorAll('.page-tab').forEach(t=>t.classList.toggle('active', t.dataset.page===name));
+  document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active', p.id==='page-'+name));
+  if(name==='progress') renderProgressPage();
+  if(name==='timer') { populateTimerLinkOptions(); renderActiveTimers(); renderTimerHistory(); }
+  if(name==='calendar') renderCalendar();
+}
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active', p.id==='tabpanel-'+name));
+}
+function prettyDate(key){
+  const [y,m,d] = key.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  return dt.toLocaleDateString(undefined, {weekday:'short', month:'short', day:'numeric'});
+}
+function allDayKeysSorted(desc=true){
+  const keys = Object.keys(state.history);
+  keys.sort();
+  return desc ? keys.reverse() : keys;
+}
+function renderProgressPage(){
+  renderOverview(); renderProjectsHistory(); renderDailyHistory(); renderSpecialHistory(); renderFutureHistoryTab();
+}
+
+function renderOverview(){
+  const today = dayKey();
+  const histKeys = allDayKeysSorted();
+  let totalDaysLogged = histKeys.length;
+  let totalProjTasksDone=0, totalProjTasks=0;
+  let totalDailyDone=0, totalDailyCount=0;
+  histKeys.forEach(k=>{
+    const h = state.history[k];
+    h.projects.forEach(p=>p.tasks.forEach(t=>{ totalProjTasks++; if(t.done) totalProjTasksDone++; }));
+    h.daily.forEach(d=>{ totalDailyCount++; if(d.done) totalDailyDone++; });
+  });
+  const projPct = totalProjTasks ? Math.round(100*totalProjTasksDone/totalProjTasks) : 0;
+  const dailyPct = totalDailyCount ? Math.round(100*totalDailyDone/totalDailyCount) : 0;
+
+  document.getElementById('summaryStats').innerHTML = `
+    <div class="stat"><div class="num">${totalDaysLogged}</div><div class="label">Days logged</div></div>
+    <div class="stat"><div class="num">${projPct}%</div><div class="label">Project tasks done</div></div>
+    <div class="stat"><div class="num">${dailyPct}%</div><div class="label">Daily habits done</div></div>
+    <div class="stat"><div class="num">${state.future.length}</div><div class="label">Future tasks queued</div></div>
+  `;
+
+  let html = '';
+  html += renderDaySummary(today, {
+    projects: state.projects.map(p=>({name:p.name, tasks:p.tasks.map(t=>({name:t.name, limit:t.limit, progress:t.limit?t.progress:null, done: t.limit? (t.progress>=t.limit) : t.done}))})),
+    daily: state.daily.map(d=>({text:d.text, done:d.done})),
+    special: state.special.filter(s=>s.addedToday===today).map(s=>({text:s.text, done:s.done}))
+  }, true);
+
+  if(histKeys.length===0){
+    html += '<div class="empty">No past days archived yet — history builds up once a day rolls over.</div>';
+  } else {
+    histKeys.forEach(k => { html += renderDaySummary(k, state.history[k], false); });
+  }
+  document.getElementById('overviewList').innerHTML = html;
+}
+function renderDaySummary(key, day, isToday){
+  const projTasks = day.projects.flatMap(p=>p.tasks);
+  const projDone = projTasks.filter(t=>t.done).length;
+  const dailyDone = day.daily.filter(d=>d.done).length;
+  const specialDone = day.special.filter(s=>s.done).length;
+  return `
+    <div class="card day-block">
+      <div class="day-label">${prettyDate(key)} ${isToday?'<span class="today-badge">TODAY</span>':''}</div>
+      <div class="task-line"><span class="tname">Project tasks</span><span class="tnum">${projDone}/${projTasks.length}</span></div>
+      <div class="task-line"><span class="tname">Daily habits</span><span class="tnum">${dailyDone}/${day.daily.length}</span></div>
+      <div class="task-line"><span class="tname">Today special</span><span class="tnum">${specialDone}/${day.special.length}</span></div>
+    </div>
+  `;
+}
+
+function renderProjectsHistory(){
+  const today = dayKey();
+  let html = '';
+  html += `<div class="card"><div class="day-label">${prettyDate(today)} <span class="today-badge">TODAY</span></div>`;
+  if(state.projects.length===0){
+    html += '<div class="empty">No projects set up.</div>';
+  } else {
+    state.projects.forEach(p=>{
+      html += `<div class="proj-name">${p.name?escapeHtml(p.name):'Tasks'}</div>`;
+      p.tasks.forEach(t=>{
+        if(t.limit){
+          const pct = Math.min(100, Math.round(100*t.progress/t.limit));
+          html += `<div class="task-line">
+            <span class="tname ${t.progress>=t.limit?'done':''}">${escapeHtml(t.name)}</span>
+            <div class="bar-wrap"><div class="bar-fill ${pct<100?'partial':''}" style="width:${pct}%"></div></div>
+            <span class="tnum">${t.progress}/${t.limit}</span>
+          </div>`;
+        } else {
+          html += `<div class="task-line">
+            <span class="check-icon ${t.done?'':'no'}">${t.done?'✓':'○'}</span>
+            <span class="tname ${t.done?'done':''}">${escapeHtml(t.name)}</span>
+          </div>`;
+        }
+      });
+    });
+  }
+  html += `</div>`;
+
+  allDayKeysSorted().forEach(k=>{
+    const h = state.history[k];
+    html += `<div class="card"><div class="day-label">${prettyDate(k)}</div>`;
+    if(h.projects.length===0){
+      html += '<div class="empty">No projects that day.</div>';
+    } else {
+      h.projects.forEach(p=>{
+        html += `<div class="proj-name">${p.name?escapeHtml(p.name):'Tasks'}</div>`;
+        p.tasks.forEach(t=>{
+          if(t.limit!==null){
+            const pct = Math.min(100, Math.round(100*(t.progress||0)/t.limit));
+            html += `<div class="task-line">
+              <span class="tname ${t.done?'done':''}">${escapeHtml(t.name)}</span>
+              <div class="bar-wrap"><div class="bar-fill ${pct<100?'partial':''}" style="width:${pct}%"></div></div>
+              <span class="tnum">${t.progress||0}/${t.limit}</span>
+            </div>`;
+          } else {
+            html += `<div class="task-line">
+              <span class="check-icon ${t.done?'':'no'}">${t.done?'✓':'○'}</span>
+              <span class="tname ${t.done?'done':''}">${escapeHtml(t.name)}</span>
+            </div>`;
+          }
+        });
+      });
+    }
+    html += `</div>`;
+  });
+  document.getElementById('projectsHistory').innerHTML = html;
+}
+
+function renderDailyHistory(){
+  const today = dayKey();
+  let html = '';
+  html += `<div class="card"><div class="day-label">${prettyDate(today)} <span class="today-badge">TODAY</span></div>`;
+  if(state.daily.length===0){ html += '<div class="empty">No daily tasks set up.</div>'; }
+  else state.daily.forEach(d=>{
+    html += `<div class="task-line"><span class="check-icon ${d.done?'':'no'}">${d.done?'✓':'○'}</span><span class="tname ${d.done?'done':''}">${escapeHtml(d.text)}</span>${d.remind?'<span class="tnum">reminders on</span>':''}</div>`;
+  });
+  html += `</div>`;
+  allDayKeysSorted().forEach(k=>{
+    const h = state.history[k];
+    html += `<div class="card"><div class="day-label">${prettyDate(k)}</div>`;
+    if(h.daily.length===0){ html += '<div class="empty">No daily tasks that day.</div>'; }
+    else h.daily.forEach(d=>{
+      html += `<div class="task-line"><span class="check-icon ${d.done?'':'no'}">${d.done?'✓':'○'}</span><span class="tname ${d.done?'done':''}">${escapeHtml(d.text)}</span></div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('dailyHistory').innerHTML = html;
+}
+
+function renderSpecialHistory(){
+  const today = dayKey();
+  let html = '';
+  const todaysSpecial = state.special.filter(s=>s.addedToday===today);
+  html += `<div class="card"><div class="day-label">${prettyDate(today)} <span class="today-badge">TODAY</span></div>`;
+  if(todaysSpecial.length===0){ html += '<div class="empty">Nothing added today.</div>'; }
+  else todaysSpecial.forEach(s=>{
+    html += `<div class="task-line"><span class="check-icon ${s.done?'':'no'}">${s.done?'✓':'○'}</span><span class="tname ${s.done?'done':''}">${escapeHtml(s.text)}</span></div>`;
+  });
+  html += `</div>`;
+  allDayKeysSorted().forEach(k=>{
+    const h = state.history[k];
+    html += `<div class="card"><div class="day-label">${prettyDate(k)}</div>`;
+    if(h.special.length===0){ html += '<div class="empty">Nothing added that day.</div>'; }
+    else h.special.forEach(s=>{
+      html += `<div class="task-line"><span class="check-icon ${s.done?'':'no'}">${s.done?'✓':'○'}</span><span class="tname ${s.done?'done':''}">${escapeHtml(s.text)}</span></div>`;
+    });
+    html += `</div>`;
+  });
+  document.getElementById('specialHistory').innerHTML = html;
+}
+
+function renderFutureHistoryTab(){
+  const el = document.getElementById('futureHistoryList');
+  if(state.future.length===0){ el.innerHTML = '<div class="card"><div class="empty">No future tasks scheduled.</div></div>'; return; }
+  const sorted = state.future.slice().sort((a,b)=>a.dueKey.localeCompare(b.dueKey));
+  el.innerHTML = `<div class="card">` + sorted.map(f=>`
+    <div class="task-line">
+      <span class="future-date">${f.dueLabel}</span>
+      <span style="flex:1;">${escapeHtml(f.text)}</span>
+    </div>
+  `).join('') + `</div>`;
+}
+
+// ---------- Timer ----------
+let timerMode = 'countdown';
+function setTimerMode(mode){
+  timerMode = mode;
+  document.getElementById('modeCountdownBtn').classList.toggle('active', mode==='countdown');
+  document.getElementById('modeStopwatchBtn').classList.toggle('active', mode==='stopwatch');
+  document.getElementById('countdownFields').style.display = mode==='countdown' ? 'flex' : 'none';
+}
+
+function populateTimerLinkOptions(){
+  const sel = document.getElementById('timerLinkSelect');
+  const prevVal = sel.value;
+  let opts = '<option value="">No linked task</option>';
+
+  // Today: project tasks
+  state.projects.forEach(p => {
+    p.tasks.forEach(t => {
+      const label = (p.name ? p.name+' — ' : '') + t.name;
+      opts += `<option value="project:${p.id}:${t.id}">${escapeHtml(label)} (today)</option>`;
+    });
+  });
+  // Today: daily tasks
+  state.daily.forEach(d => {
+    opts += `<option value="daily:${d.id}">${escapeHtml(d.text)} (daily)</option>`;
+  });
+  // Today: special tasks (today only)
+  const today = dayKey();
+  state.special.filter(s=>s.addedToday===today).forEach(s => {
+    opts += `<option value="special:${s.id}">${escapeHtml(s.text)} (today special)</option>`;
+  });
+  // Future tasks
+  state.future.forEach(f => {
+    opts += `<option value="future:${f.id}">${escapeHtml(f.text)} (future — ${f.dueLabel})</option>`;
+  });
+
+  sel.innerHTML = opts;
+  if([...sel.options].some(o=>o.value===prevVal)) sel.value = prevVal;
+}
+
+function resolveLinkedTaskLabel(linkVal){
+  if(!linkVal) return null;
+  const [kind, a, b] = linkVal.split(':');
+  if(kind==='project'){
+    const p = state.projects.find(p=>p.id===a);
+    const t = p && p.tasks.find(t=>t.id===b);
+    if(!t) return null;
+    return { kind, id:b, projectId:a, label: (p.name?p.name+' — ':'')+t.name };
+  }
+  if(kind==='daily'){
+    const d = state.daily.find(d=>d.id===a);
+    if(!d) return null;
+    return { kind, id:a, label: d.text };
+  }
+  if(kind==='special'){
+    const s = state.special.find(s=>s.id===a);
+    if(!s) return null;
+    return { kind, id:a, label: s.text };
+  }
+  if(kind==='future'){
+    const f = state.future.find(f=>f.id===a);
+    if(!f) return null;
+    return { kind, id:a, label: f.text };
+  }
+  return null;
+}
+
+function createTimer(){
+  const label = document.getElementById('timerLabel').value.trim();
+  const linkVal = document.getElementById('timerLinkSelect').value;
+  const linked = resolveLinkedTaskLabel(linkVal);
+
+  if(timerMode==='countdown'){
+    const min = parseInt(document.getElementById('timerMin').value,10) || 0;
+    const sec = parseInt(document.getElementById('timerSec').value,10) || 0;
+    const total = min*60 + sec;
+    if(total <= 0){ showAlertModal('Set a duration greater than 0 for a countdown timer.'); return; }
+    state.timers.push({
+      id: uid(), label: label || (linked ? linked.label : 'Timer'),
+      mode:'countdown', totalSeconds: total, remainingSeconds: total,
+      running: true, linkedTaskId: linked?linked.id:null, linkedTaskKind: linked?linked.kind:null,
+      linkedProjectId: linked&&linked.projectId?linked.projectId:null, linkedTaskLabel: linked?linked.label:null
+    });
+  } else {
+    state.timers.push({
+      id: uid(), label: label || (linked ? linked.label : 'Timer'),
+      mode:'stopwatch', elapsedSeconds: 0,
+      running: true, linkedTaskId: linked?linked.id:null, linkedTaskKind: linked?linked.kind:null,
+      linkedProjectId: linked&&linked.projectId?linked.projectId:null, linkedTaskLabel: linked?linked.label:null
+    });
+  }
+  document.getElementById('timerLabel').value = '';
+  document.getElementById('timerMin').value = '';
+  document.getElementById('timerSec').value = '';
+  save(); renderActiveTimers();
+}
+
+function fmtTime(totalSec){
+  totalSec = Math.max(0, Math.round(totalSec));
+  const h = Math.floor(totalSec/3600);
+  const m = Math.floor((totalSec%3600)/60);
+  const s = totalSec%60;
+  const pad = n => String(n).padStart(2,'0');
+  return h>0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function renderActiveTimers(){
+  const el = document.getElementById('activeTimers');
+  if(state.timers.length===0){ el.innerHTML = '<div class="empty">No timers running. Create one above.</div>'; return; }
+  el.innerHTML = state.timers.map(t => {
+    const display = t.mode==='countdown' ? fmtTime(t.remainingSeconds) : fmtTime(t.elapsedSeconds);
+    const warn = t.mode==='countdown' && t.remainingSeconds <= 10;
+    return `
+      <div class="timer-card" data-tid="${t.id}">
+        <div class="timer-top">
+          <div>
+            <div class="timer-name">${escapeHtml(t.label)}</div>
+            ${t.linkedTaskLabel ? `<div class="timer-link-tag">↳ ${escapeHtml(t.linkedTaskLabel)}</div>` : ''}
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--pencil); text-transform:uppercase;">${t.mode}</span>
+        </div>
+        <div class="timer-display ${warn?'countdown-warn':''}">${display}</div>
+        <div class="timer-controls">
+          ${t.running
+            ? `<button onclick="pauseTimer('${t.id}')">Pause</button>`
+            : `<button class="primary" onclick="resumeTimer('${t.id}')">Resume</button>`}
+          <button onclick="stopTimer('${t.id}')">Stop</button>
+          <button onclick="removeTimer('${t.id}')">Remove</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function pauseTimer(id){
+  const t = state.timers.find(t=>t.id===id);
+  if(t){ t.running = false; save(); renderActiveTimers(); }
+}
+function resumeTimer(id){
+  const t = state.timers.find(t=>t.id===id);
+  if(t){ t.running = true; save(); renderActiveTimers(); }
+}
+function removeTimer(id){
+  showConfirmModal('Remove this timer? Its progress will be lost (not logged).', ()=>{
+    state.timers = state.timers.filter(t=>t.id!==id);
+    save(); renderActiveTimers();
+  });
+}
+function stopTimer(id){
+  const t = state.timers.find(t=>t.id===id);
+  if(!t) return;
+  finishTimer(t, t.mode==='countdown' ? (t.totalSeconds - t.remainingSeconds) : t.elapsedSeconds, false);
+}
+
+// Called every second by the ticking interval
+function tickTimers(){
+  let changed = false;
+  state.timers.forEach(t => {
+    if(!t.running) return;
+    if(t.mode==='countdown'){
+      t.remainingSeconds -= 1;
+      changed = true;
+      if(t.remainingSeconds <= 0){
+        t.remainingSeconds = 0;
+        finishTimer(t, t.totalSeconds, true);
+      }
+    } else {
+      t.elapsedSeconds += 1;
+      changed = true;
+    }
+  });
+  if(changed){
+    save();
+    if(document.getElementById('page-timer').classList.contains('active')) renderActiveTimers();
+  }
+}
+setInterval(tickTimers, 1000);
+
+// Timer reached its end (countdown hit 0) or was manually stopped
+function finishTimer(t, durationSeconds, autoCompleted){
+  // remove from active timers
+  state.timers = state.timers.filter(x=>x.id!==t.id);
+
+  const logEntry = {
+    id: uid(), label: t.label, mode: t.mode, durationSeconds,
+    completedAt: new Date().toISOString(),
+    linkedTaskLabel: t.linkedTaskLabel || null,
+    linkedTaskKind: t.linkedTaskKind || null,
+    linkedTaskId: t.linkedTaskId || null,
+    linkedProjectId: t.linkedProjectId || null,
+    action: null
+  };
+  state.timerLog.unshift(logEntry);
+  save();
+  renderActiveTimers();
+  renderTimerHistory();
+
+  if(t.linkedTaskId){
+    askTimerAction(t, logEntry, durationSeconds);
+  }
+}
+
+function askTimerAction(t, logEntry, durationSeconds){
+  document.getElementById('timerDoneTitle').textContent = t.mode==='countdown' ? 'Timer finished' : 'Timer stopped';
+  document.getElementById('timerDoneMsg').textContent =
+    `"${t.label}" ran for ${fmtTime(durationSeconds)}, linked to "${t.linkedTaskLabel}". What should happen to that task?`;
+
+  let buttons = '';
+  if(t.linkedTaskKind==='project'){
+    buttons = `
+      <button class="modal-btn" id="tdMarkComplete">Mark task complete / add reps</button>
+      <button class="btn subtle small" id="tdJustLog" style="margin-top:8px;">Just log the time, don't change task</button>
+    `;
+  } else {
+    buttons = `
+      <button class="modal-btn" id="tdMarkComplete">Mark task complete</button>
+      <button class="btn subtle small" id="tdJustLog" style="margin-top:8px;">Just log the time, don't change task</button>
+    `;
+  }
+  document.getElementById('timerDoneButtons').innerHTML = buttons;
+  document.getElementById('timerDoneOverlay').classList.add('open');
+
+  document.getElementById('tdJustLog').onclick = ()=>{
+    logEntry.action = 'logged_only';
+    save(); renderTimerHistory(); renderProjects(); renderDaily(); renderSpecial();
+    document.getElementById('timerDoneOverlay').classList.remove('open');
+  };
+  document.getElementById('tdMarkComplete').onclick = ()=>{
+    applyTimerCompletionToTask(t);
+    logEntry.action = 'marked_complete';
+    save(); renderTimerHistory(); renderProjects(); renderDaily(); renderSpecial();
+    document.getElementById('timerDoneOverlay').classList.remove('open');
+  };
+}
+
+function applyTimerCompletionToTask(t){
+  if(t.linkedTaskKind==='project'){
+    const p = state.projects.find(p=>p.id===t.linkedProjectId);
+    const task = p && p.tasks.find(x=>x.id===t.linkedTaskId);
+    if(task){
+      if(task.limit) task.progress = task.limit;
+      else task.done = true;
+    }
+  } else if(t.linkedTaskKind==='daily'){
+    const d = state.daily.find(d=>d.id===t.linkedTaskId);
+    if(d) d.done = true;
+  } else if(t.linkedTaskKind==='special'){
+    const s = state.special.find(s=>s.id===t.linkedTaskId);
+    if(s) s.done = true;
+  }
+  // future tasks have no "done" state to set until they're promoted to today
+}
+
+function renderTimerHistory(){
+  const el = document.getElementById('timerHistoryList');
+  if(state.timerLog.length===0){ el.innerHTML = '<div class="card"><div class="empty">No completed timer sessions yet.</div></div>'; return; }
+  el.innerHTML = '<div class="card">' + state.timerLog.slice(0,50).map(entry => {
+    const d = new Date(entry.completedAt);
+    const dateStr = d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+    return `
+      <div class="hist-row">
+        <span class="hdate">${dateStr}</span>
+        <span class="hname">${escapeHtml(entry.label)}${entry.linkedTaskLabel?` <span style="color:var(--pencil);">→ ${escapeHtml(entry.linkedTaskLabel)}</span>`:''}</span>
+        <span class="hdur">${fmtTime(entry.durationSeconds)}</span>
+      </div>
+    `;
+  }).join('') + '</div>';
+}
+
+// Return timer log entries linked to a given task, for display on the task itself
+function timerRecordsForTask(kind, id){
+  return state.timerLog.filter(e => e.linkedTaskKind===kind && e.linkedTaskId===id);
+}
+
+// ---------- Manuscript (optional daily notes) ----------
+let manuscriptSaveTimer = null;
+function loadManuscriptForToday(){
+  const key = dayKey();
+  const el = document.getElementById('manuscriptInput');
+  el.value = state.notes[key] || '';
+  updateManuscriptStatus();
+}
+function onManuscriptInput(){
+  const key = dayKey();
+  const text = document.getElementById('manuscriptInput').value;
+  clearTimeout(manuscriptSaveTimer);
+  document.getElementById('manuscriptStatus').textContent = 'Saving…';
+  manuscriptSaveTimer = setTimeout(()=>{
+    if(text.trim()===''){ delete state.notes[key]; }
+    else { state.notes[key] = text; }
+    save();
+    updateManuscriptStatus();
+  }, 500);
+}
+function updateManuscriptStatus(){
+  const key = dayKey();
+  const has = !!(state.notes[key] && state.notes[key].trim());
+  document.getElementById('manuscriptStatus').textContent = has ? 'Saved' : '';
+}
+function getNoteForDay(key){
+  return state.notes[key] || '';
+}
+function setNoteForDay(key, text){
+  if(text.trim()==='') delete state.notes[key];
+  else state.notes[key] = text;
+  save();
+}
+
+let calNoteSaveTimer = null;
+function onCalNoteInput(key){
+  const text = document.getElementById('calNoteInput').value;
+  clearTimeout(calNoteSaveTimer);
+  const statusEl = document.getElementById('calNoteStatus');
+  if(statusEl) statusEl.textContent = 'Saving…';
+  calNoteSaveTimer = setTimeout(()=>{
+    setNoteForDay(key, text);
+    if(statusEl) statusEl.textContent = text.trim() ? 'Saved' : '';
+    renderCalendar(); // refresh dot indicator on the grid
+    // keep Today's manuscript field in sync if we just edited today's note
+    if(key === dayKey()){
+      const todayInput = document.getElementById('manuscriptInput');
+      if(todayInput) todayInput.value = text;
+      updateManuscriptStatus();
+    }
+  }, 500);
+}
+
+// ---------- Calendar ----------
+let calViewYear, calViewMonth; // 0-indexed month
+
+function calShiftMonth(delta){
+  calViewMonth += delta;
+  if(calViewMonth < 0){ calViewMonth = 11; calViewYear--; }
+  if(calViewMonth > 11){ calViewMonth = 0; calViewYear++; }
+  renderCalendar();
+}
+
+// Gather everything that happened/is scheduled on a given dayKey, across all sections
+function activityForDay(key){
+  const today = dayKey();
+  const isToday = key === today;
+  const h = state.history[key];
+
+  const result = { projects: [], daily: [], special: [], future: [], timers: [] };
+
+  if(isToday){
+    state.projects.forEach(p => {
+      p.tasks.forEach(t => {
+        const done = t.limit ? (t.progress >= t.limit) : t.done;
+        const label = (p.name?p.name+' — ':'') + t.name;
+        result.projects.push({ label, done, detail: t.limit ? `${t.progress}/${t.limit}` : (done?'done':'not done') });
+      });
+    });
+    state.daily.forEach(d => result.daily.push({ label:d.text, done:d.done }));
+    state.special.filter(s=>s.addedToday===key).forEach(s => result.special.push({ label:s.text, done:s.done }));
+  } else if(h){
+    h.projects.forEach(p => {
+      p.tasks.forEach(t => {
+        const label = (p.name?p.name+' — ':'') + t.name;
+        result.projects.push({ label, done:t.done, detail: t.limit!==null ? `${t.progress||0}/${t.limit}` : (t.done?'done':'not done') });
+      });
+    });
+    h.daily.forEach(d => result.daily.push({ label:d.text, done:d.done }));
+    h.special.forEach(s => result.special.push({ label:s.text, done:s.done }));
+  }
+
+  // Future tasks due on this day (works for today or any future date, not archived)
+  state.future.filter(f=>f.dueKey===key).forEach(f => result.future.push({ label:f.text }));
+
+  // Timer sessions completed on this day
+  state.timerLog.forEach(entry => {
+    if(dayKey(new Date(entry.completedAt)) === key){
+      result.timers.push({ label: entry.label, duration: fmtTime(entry.durationSeconds), linkedTaskLabel: entry.linkedTaskLabel });
+    }
+  });
+
+  result.note = getNoteForDay(key);
+
+  return result;
+}
+
+function dayHasAnyActivity(act){
+  return act.projects.length || act.daily.length || act.special.length || act.future.length || act.timers.length || !!(act.note && act.note.trim());
+}
+
+let calSelectedKey = null;
+
+function renderCalendar(){
+  if(calViewYear===undefined){
+    const now = new Date();
+    calViewYear = now.getFullYear();
+    calViewMonth = now.getMonth();
+  }
+  const first = new Date(calViewYear, calViewMonth, 1);
+  const startWeekday = first.getDay();
+  const daysInMonth = new Date(calViewYear, calViewMonth+1, 0).getDate();
+  const monthLabel = first.toLocaleDateString(undefined,{month:'long', year:'numeric'});
+  document.getElementById('calMonthLabel').textContent = monthLabel;
+
+  const today = dayKey();
+  let cellsHtml = '';
+  for(let i=0;i<startWeekday;i++){ cellsHtml += `<div class="cal-cell empty-cell"></div>`; }
+
+  for(let d=1; d<=daysInMonth; d++){
+    const dt = new Date(calViewYear, calViewMonth, d);
+    const key = dayKey(dt);
+    const act = activityForDay(key);
+    let dots = '';
+    if(act.projects.length) dots += '<span class="dot dot-proj"></span>';
+    if(act.daily.length) dots += '<span class="dot dot-daily"></span>';
+    if(act.special.length) dots += '<span class="dot dot-special"></span>';
+    if(act.future.length) dots += '<span class="dot dot-future"></span>';
+    if(act.timers.length) dots += '<span class="dot dot-timer"></span>';
+    if(act.note && act.note.trim()) dots += '<span class="dot dot-note"></span>';
+    cellsHtml += `
+      <div class="cal-cell ${key===today?'is-today':''} ${key===calSelectedKey?'selected':''}" onclick="selectCalDay('${key}')">
+        <span class="cal-daynum">${d}</span>
+        <div class="cal-dots">${dots}</div>
+      </div>
+    `;
+  }
+  document.getElementById('calGrid').innerHTML = cellsHtml;
+
+  if(calSelectedKey) renderCalDayDetail(calSelectedKey);
+}
+
+function selectCalDay(key){
+  calSelectedKey = key;
+  renderCalendar();
+  renderCalDayDetail(key);
+}
+
+function renderCalDayDetail(key){
+  const el = document.getElementById('calDayDetail');
+  const act = activityForDay(key);
+  const [y,m,d] = key.split('-').map(Number);
+  const label = new Date(y,m-1,d).toLocaleDateString(undefined,{weekday:'long', month:'long', day:'numeric', year:'numeric'});
+
+  const noteBlock = `
+    <div class="cal-detail-group">
+      <div class="cal-detail-label">Manuscript (note)</div>
+      <textarea id="calNoteInput" data-day-key="${key}" placeholder="No note for this day — optional."
+        oninput="onCalNoteInput('${key}')"
+        style="width:100%; font-family:'Inter',sans-serif; font-size:13px; line-height:1.5; padding:8px 10px;
+        border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff; color:var(--ink);
+        resize:vertical; box-sizing:border-box;" rows="3">${escapeHtml(act.note||'')}</textarea>
+      <span id="calNoteStatus" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--pencil);"></span>
+    </div>
+  `;
+
+  if(!dayHasAnyActivity(act)){
+    el.innerHTML = `<div class="cal-detail-date">${label}</div><div class="empty">No activity recorded for this day.</div>
+      ${noteBlock}
+      <a class="export-btn" href="${buildIcsDataUrl(key,label,act)}" download="ledger-${key}.ics">⬇ Add day to phone calendar</a>`;
+    return;
+  }
+
+  let html = `<div class="cal-detail-date">${label}</div>`;
+  if(act.projects.length){
+    html += `<div class="cal-detail-group"><div class="cal-detail-label">Projects</div>` +
+      act.projects.map(p=>`<div class="cal-detail-item"><span class="check-icon ${p.done?'':'no'}">${p.done?'✓':'○'}</span>${escapeHtml(p.label)} <span style="color:var(--pencil);font-size:11px;">${p.detail}</span></div>`).join('') + `</div>`;
+  }
+  if(act.daily.length){
+    html += `<div class="cal-detail-group"><div class="cal-detail-label">Daily Tasks</div>` +
+      act.daily.map(d=>`<div class="cal-detail-item"><span class="check-icon ${d.done?'':'no'}">${d.done?'✓':'○'}</span>${escapeHtml(d.label)}</div>`).join('') + `</div>`;
+  }
+  if(act.special.length){
+    html += `<div class="cal-detail-group"><div class="cal-detail-label">Today Special</div>` +
+      act.special.map(s=>`<div class="cal-detail-item"><span class="check-icon ${s.done?'':'no'}">${s.done?'✓':'○'}</span>${escapeHtml(s.label)}</div>`).join('') + `</div>`;
+  }
+  if(act.future.length){
+    html += `<div class="cal-detail-group"><div class="cal-detail-label">Future Tasks Due</div>` +
+      act.future.map(f=>`<div class="cal-detail-item">📌 ${escapeHtml(f.label)}
+        <a class="export-btn" style="margin:0 0 0 6px; padding:3px 9px;" href="${buildIcsDataUrlForItem(f.label,key)}" download="task.ics">⬇</a>
+      </div>`).join('') + `</div>`;
+  }
+  if(act.timers.length){
+    html += `<div class="cal-detail-group"><div class="cal-detail-label">Timer Sessions</div>` +
+      act.timers.map(t=>`<div class="cal-detail-item">⏱ ${escapeHtml(t.label)} — ${t.duration}${t.linkedTaskLabel?` <span style="color:var(--pencil);font-size:11px;">→ ${escapeHtml(t.linkedTaskLabel)}</span>`:''}</div>`).join('') + `</div>`;
+  }
+
+  html += noteBlock;
+  html += `<a class="export-btn" href="${buildIcsDataUrl(key,label,act)}" download="ledger-${key}.ics">⬇ Add day to phone calendar</a>`;
+  el.innerHTML = html;
+}
+
+// ---- .ics export (works with Google Calendar, Apple Calendar, Outlook, etc.) ----
+function icsEscape(str){
+  return String(str).replace(/[\\;,]/g, m => '\\'+m).replace(/\n/g,'\\n');
+}
+function buildIcsDataUrl(key, dateLabel, act){
+  const [y,m,d] = key.split('-').map(Number);
+  const dateStr = `${y}${String(m).padStart(2,'0')}${String(d).padStart(2,'0')}`;
+  const lines = [];
+  const summaryParts = [];
+  if(act.projects.length) summaryParts.push(`${act.projects.length} project task(s)`);
+  if(act.daily.length) summaryParts.push(`${act.daily.length} daily task(s)`);
+  if(act.special.length) summaryParts.push(`${act.special.length} special task(s)`);
+  if(act.future.length) summaryParts.push(`${act.future.length} future task(s) due`);
+  const summary = summaryParts.length ? `Ledger: ${summaryParts.join(', ')}` : 'Ledger day';
+
+  let descLines = [];
+  act.projects.forEach(p=>descLines.push(`Project: ${p.label} (${p.detail})`));
+  act.daily.forEach(dd=>descLines.push(`Daily: ${dd.label} — ${dd.done?'done':'not done'}`));
+  act.special.forEach(s=>descLines.push(`Special: ${s.label} — ${s.done?'done':'not done'}`));
+  act.future.forEach(f=>descLines.push(`Future due: ${f.label}`));
+  act.timers.forEach(t=>descLines.push(`Timer: ${t.label} (${t.duration})`));
+
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Daily Ledger//EN',
+    'BEGIN:VEVENT',
+    `UID:${dateStr}-ledger-${Math.random().toString(36).slice(2)}@dailyledger`,
+    `DTSTAMP:${dateStr}T000000Z`,
+    `DTSTART;VALUE=DATE:${dateStr}`,
+    `SUMMARY:${icsEscape(summary)}`,
+    `DESCRIPTION:${icsEscape(descLines.join('\n'))}`,
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+}
+function buildIcsDataUrlForItem(label, key){
+  const [y,m,d] = key.split('-').map(Number);
+  const dateStr = `${y}${String(m).padStart(2,'0')}${String(d).padStart(2,'0')}`;
+  const ics = [
+    'BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Daily Ledger//EN',
+    'BEGIN:VEVENT',
+    `UID:${dateStr}-${Math.random().toString(36).slice(2)}@dailyledger`,
+    `DTSTAMP:${dateStr}T000000Z`,
+    `DTSTART;VALUE=DATE:${dateStr}`,
+    `SUMMARY:${icsEscape(label)}`,
+    'END:VEVENT','END:VCALENDAR'
+  ].join('\r\n');
+  return 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
+}
+
+// ---------- init ----------
+load();
+
+// Seed example data on first-ever load, so the prototype is immediately testable
+if(state.projects.length===0 && state.daily.length===0 && state.lastSeenDay===null){
+  state.projects.push({
+    id: uid(), name: 'Boxing',
+    tasks: [
+      {id: uid(), name:'Jab', limit:100, progress:0, done:false},
+      {id: uid(), name:'Cross', limit:100, progress:0, done:false},
+      {id: uid(), name:'Hook', limit:100, progress:0, done:false},
+      {id: uid(), name:'Uppercut', limit:100, progress:0, done:false}
+    ]
+  });
+  state.daily.push({id: uid(), text:'Drink water', done:false, remind:false, startHour:8, endHour:21, everyHours:2});
+  save();
+}
+
+checkDayRollover();
+renderStamp();
+renderProjects();
+renderDaily();
+renderSpecial();
+renderFutureChips();
+renderFuture();
+loadManuscriptForToday();
+
+// re-check rollover periodically in case the tab stays open past midnight
+setInterval(()=>{
+  checkDayRollover();
+  renderProjects(); renderDaily(); renderSpecial(); renderFuture(); renderStamp(); loadManuscriptForToday();
+}, 5*60000);
+
+// ---------- PWA: register service worker ----------
+// Uses a relative path so this still works if hosted under a repo sub-path
+// (e.g. username.github.io/repo-name/) rather than a domain root.
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    const swUrl = new URL('sw.js', window.location.href).href;
+    navigator.serviceWorker.register(swUrl, { scope: './' })
+      .catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+
+// ---------- PWA: install button ----------
+// The button stays hidden unless the browser actually offers an install prompt
+// (Chrome/Edge/Android fire 'beforeinstallprompt'; iOS Safari and already-installed
+// apps never do, so the button correctly disappears in those cases rather than
+// sitting there doing nothing).
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'flex';
+});
+function triggerInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(() => {
+    deferredInstallPrompt = null;
+    const btn = document.getElementById('installBtn');
+    if(btn) btn.style.display = 'none';
+  });
+}
+window.addEventListener('appinstalled', () => {
+  const btn = document.getElementById('installBtn');
+  if(btn) btn.style.display = 'none';
+  deferredInstallPrompt = null;
+});
+</script>
+</body>
+</html>
