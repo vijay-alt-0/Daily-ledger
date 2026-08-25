@@ -1249,14 +1249,16 @@ function addFuture(){
   save(); renderFuture(); renderFutureChips();
 }
 function renderFuture(){
-  // promote any due-today future tasks into special
+  // Promote any future task whose due date is today OR earlier (dueKey <= today) into Today Special.
+  // Using <= instead of === means a task doesn't get stuck in Future forever if the app
+  // wasn't opened on its exact due day — it still surfaces the next time you open the app.
   const today = dayKey();
-  const due = state.future.filter(f=>f.dueKey===today);
+  const due = state.future.filter(f=>f.dueKey<=today);
   if(due.length){
     due.forEach(f=>{
       state.special.push({id: uid(), text: f.text, done:false, addedToday: today});
     });
-    state.future = state.future.filter(f=>f.dueKey!==today);
+    state.future = state.future.filter(f=>f.dueKey>today);
     save();
     renderSpecial();
   }
