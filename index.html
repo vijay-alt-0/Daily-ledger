@@ -336,6 +336,15 @@
     width:9px; height:9px; border-radius:50%; flex-shrink:0; cursor:pointer;
     border:1px solid rgba(34,40,59,0.15);
   }
+  .palette-grid{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:10px;
+    margin:4px 0 6px;
+  }
+  .palette-swatch{
+    width:100%; aspect-ratio:1; border-radius:8px; border:1.5px solid rgba(34,40,59,0.12);
+    cursor:pointer; padding:0;
+  }
+  .palette-swatch:active{ transform:scale(0.92); }
   .daily-count-btn{
     width:24px; height:24px; border-radius:5px;
     border:1px solid var(--rule); background:transparent; color:var(--rule-strong);
@@ -371,6 +380,10 @@
     color:var(--rule-strong); background:var(--amber-bg);
     border:1px solid var(--rule); border-radius:10px; padding:2px 7px;
     white-space:nowrap; flex-shrink:0;
+  }
+  .reschedule-btn{
+    background:none; border:none; cursor:pointer; font-size:14px;
+    padding:2px 4px; flex-shrink:0; line-height:1;
   }
 
   /* Section 3: today special */
@@ -1085,22 +1098,58 @@ function deleteProject(pid){
 
 // ---------- Section 2: Daily tasks ----------
 const DAILY_COLOR_PALETTE = [
-  {light:'#F6E9D0', dark:'#D9A441'}, // amber
-  {light:'#DEE3EE', dark:'#6C7A9C'}, // blue-gray
+  {light:'#F6DEDC', dark:'#B4443E'}, // red
+  {light:'#F8E3D6', dark:'#C2643A'}, // red-orange
+  {light:'#F6E9D0', dark:'#D9A441'}, // amber / orange
+  {light:'#F7F0C9', dark:'#C9A227'}, // yellow
+  {light:'#EDF0CB', dark:'#93A83D'}, // yellow-green
   {light:'#E1EAE2', dark:'#4C7A5E'}, // green
-  {light:'#F6DEDC', dark:'#B4443E'}, // ledger red
+  {light:'#DCEEEA', dark:'#3F8F7F'}, // teal
+  {light:'#DCEBEF', dark:'#3389A0'}, // cyan / sky
+  {light:'#DEE3EE', dark:'#6C7A9C'}, // blue-gray
+  {light:'#E1E1F0', dark:'#5A5FA8'}, // indigo
   {light:'#EAE1F2', dark:'#8B5FBF'}, // purple
-  {light:'#DCEEEA', dark:'#3F8F7F'}  // teal
+  {light:'#F5DCE9', dark:'#B0508C'}  // magenta / pink
 ];
 function dailyColor(d){
   const idx = (d.colorIndex||0) % DAILY_COLOR_PALETTE.length;
   return DAILY_COLOR_PALETTE[idx];
 }
-function cycleDailyColor(id){
-  const d = state.daily.find(d=>d.id===id);
-  if(!d) return;
-  d.colorIndex = ((d.colorIndex||0) + 1) % DAILY_COLOR_PALETTE.length;
-  save(); renderDaily();
+
+// Interpolates between two hex colors at position t (0..1). Used to build the
+// light-to-dark ramp across a task's filled segments, rather than a flat single shade.
+function hexInterpolate(hexA, hexB, t){
+  const a = hexA.match(/\w\w/g).map(h=>parseInt(h,16));
+  const b = hexB.match(/\w\w/g).map(h=>parseInt(h,16));
+  const mix = a.map((c,i)=>Math.round(c + (b[i]-c)*t));
+  return '#' + mix.map(c=>c.toString(16).padStart(2,'0')).join('');
+}
+
+let colorPickerTaskId = null;
+function openColorPicker(id){
+  colorPickerTaskId = id;
+  const grid = DAILY_COLOR_PALETTE.map((c,i)=>
+    `<button class="palette-swatch" style="background:${c.dark};" onclick="pickDailyColor(${i})" aria-label="color option"></button>`
+  ).join('');
+  document.getElementById('confirmMessage').textContent = 'Choose a color for this task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <div class="palette-grid">${grid}</div>
+    <button class="btn subtle small" id="colorPickerCancel" style="margin-top:10px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('colorPickerCancel').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+    colorPickerTaskId = null;
+  };
+}
+function pickDailyColor(paletteIndex){
+  const d = state.daily.find(d=>d.id===colorPickerTaskId);
+  if(d){
+    d.colorIndex = paletteIndex;
+    save(); renderDaily();
+  }
+  document.getElementById('confirmOverlay').classList.remove('open');
+  colorPickerTaskId = null;
 }
 
 function addDaily(){
@@ -1126,7 +1175,11 @@ function dailyBarHtml(d){
     let segs = '';
     for(let i=0;i<d.target;i++){
       const filled = i < d.progress;
-      segs += `<div class="daily-bar-seg" style="background:${filled?color.dark:color.light};"></div>`;
+      // Ramp from light to dark across the filled segments' positions, instead of
+      // a flat single shade -- segment 1 is palest, the last filled one is richest.
+      const t = d.target > 1 ? i/(d.target-1) : 1;
+      const segColor = filled ? hexInterpolate(color.light, color.dark, t) : '#E3E0D5';
+      segs += `<div class="daily-bar-seg" style="background:${segColor};"></div>`;
     }
     return `<div class="daily-bar-segments">${segs}</div>`;
   } else {
@@ -1152,7 +1205,7 @@ function renderDaily(){
     <div class="daily-item">
       <div class="daily-item-row">
         <button class="check-btn ${complete?'checked':''}" onclick="onDailyCheckboxTap('${d.id}')">${complete?'✓':''}</button>
-        <span class="color-dot" style="background:${color.dark};" onclick="cycleDailyColor('${d.id}')" title="Tap to change color"></span>
+        <span class="color-dot" style="background:${color.dark};" onclick="openColorPicker('${d.id}')" title="Tap to choose a color"></span>
         <span class="daily-text ${complete?'done':''}">${escapeHtml(d.text)}</span>
         ${timerRecordBadge('daily', d.id)}
         ${hasTarget ? `
@@ -1240,9 +1293,51 @@ function renderPastTasks(){
       <button class="check-btn" onclick="completePastTask('${p.id}')"></button>
       <span style="flex:1; font-size:14px; font-weight:500;">${escapeHtml(p.text)}</span>
       <span class="past-date-tag">${shortDateTag(p.originalDay)}</span>
+      <button class="reschedule-btn" onclick="openRescheduleModal('${p.id}')" title="Reschedule to a future date">📅</button>
       <button class="rm-x" onclick="requestDeletePastTask('${p.id}')">×</button>
     </div>
   `).join('');
+}
+
+// Optional reschedule: instead of completing or deleting a past task, push it
+// out to a chosen future date -- it leaves Past Task and reappears via the normal
+// Future Task -> Today Special promotion flow when that new date arrives.
+let rescheduleTaskId = null;
+function openRescheduleModal(id){
+  rescheduleTaskId = id;
+  const p = state.pastTasks.find(p=>p.id===id);
+  if(!p) return;
+  document.getElementById('confirmMessage').innerHTML = `Reschedule "${escapeHtml(p.text)}" to:`;
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="date" id="rescheduleDateInput" style="width:100%; font-family:'Inter',sans-serif; font-size:14px;
+      padding:9px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff;
+      color:var(--ink); box-sizing:border-box; margin-bottom:10px;">
+    <button class="modal-btn" id="rescheduleConfirmBtn">Reschedule</button>
+    <button class="btn subtle small" id="rescheduleCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  const dateInput = document.getElementById('rescheduleDateInput');
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
+  dateInput.min = dayKey(tomorrow);
+  dateInput.value = dayKey(tomorrow);
+  document.getElementById('rescheduleConfirmBtn').onclick = ()=> confirmReschedule();
+  document.getElementById('rescheduleCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+    rescheduleTaskId = null;
+  };
+}
+function confirmReschedule(){
+  const val = document.getElementById('rescheduleDateInput').value;
+  if(!val){ return; }
+  const p = state.pastTasks.find(p=>p.id===rescheduleTaskId);
+  if(!p){ document.getElementById('confirmOverlay').classList.remove('open'); return; }
+  const [y,m,d] = val.split('-').map(Number);
+  const target = new Date(y, m-1, d);
+  state.future.push({ id: uid(), text: p.text, dueKey: val, dueLabel: target.toLocaleDateString(undefined,{month:'short',day:'numeric'}) });
+  state.pastTasks = state.pastTasks.filter(pt=>pt.id!==rescheduleTaskId);
+  save(); renderPastTasks(); renderFuture();
+  document.getElementById('confirmOverlay').classList.remove('open');
+  rescheduleTaskId = null;
 }
 function completePastTask(id){
   // Finishing it here only removes it from the active Past Task list.
