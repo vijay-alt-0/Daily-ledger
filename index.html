@@ -324,49 +324,54 @@
 
   /* Section 2: daily tasks */
   .daily-item{
-    display:flex; align-items:center; gap:10px;
+    display:flex; flex-direction:column; gap:8px;
     padding:10px 4px;
     border-top:1px dashed rgba(34,40,59,0.12);
   }
   .daily-item:first-of-type{border-top:none;}
+  .daily-item-row{ display:flex; align-items:center; gap:8px; }
   .daily-text{flex:1; font-size:14px; font-weight:500;}
   .daily-text.done{color:var(--green); text-decoration:line-through; text-decoration-color:rgba(76,122,94,0.5);}
-  .remind-badge{
-    font-family:'JetBrains Mono',monospace;
-    font-size:9.5px;
-    color:var(--rule-strong);
-    background:var(--amber-bg);
-    border:1px solid var(--rule);
-    border-radius:10px;
-    padding:2px 7px;
-    white-space:nowrap;
-  }
-  .remind-toggle{
-    display:flex; align-items:center; gap:6px;
-    font-size:11px; color:var(--pencil);
-  }
-  .switch{
-    width:32px; height:18px; border-radius:10px;
-    background:#D8D2C3; position:relative; cursor:pointer; flex-shrink:0;
+  .color-dot{
+    width:9px; height:9px; border-radius:50%; flex-shrink:0; cursor:pointer;
     border:1px solid rgba(34,40,59,0.15);
   }
-  .switch.on{background:var(--green);}
-  .switch::after{
-    content:''; position:absolute; top:1px; left:1px;
-    width:14px; height:14px; border-radius:50%; background:#fff;
-    transition:left .15s ease;
-    box-shadow:0 1px 2px rgba(0,0,0,0.2);
+  .daily-count-btn{
+    width:24px; height:24px; border-radius:5px;
+    border:1px solid var(--rule); background:transparent; color:var(--rule-strong);
+    font-family:'JetBrains Mono',monospace; font-weight:700; font-size:15px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    padding:0; line-height:1; flex-shrink:0;
   }
-  .switch.on::after{left:15px;}
-  .reminder-settings{
-    display:none;
-    gap:8px; margin-top:8px; padding:10px;
-    background:var(--paper-2); border-radius:7px;
-    font-size:12px; align-items:center; flex-wrap:wrap;
+  .daily-count-btn:active{ transform:scale(0.92); }
+  .daily-tally{
+    font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--pencil);
+    min-width:34px; text-align:center; flex-shrink:0;
   }
-  .reminder-settings.open{display:flex;}
-  .reminder-settings input[type=number]{width:60px; flex:none;}
-  .reminder-settings label{color:var(--pencil); font-size:11.5px;}
+  .daily-tally.complete{ color:var(--green); font-weight:700; }
+  .daily-bar-segments{ display:flex; gap:3px; }
+  .daily-bar-seg{ flex:1; height:9px; border-radius:2px; background:#E3E0D5; }
+  .daily-bar-gradient{
+    position:relative; height:9px; border-radius:2px; background:#E3E0D5; overflow:hidden;
+  }
+  .daily-bar-gradient-fill{ position:absolute; left:0; top:0; bottom:0; }
+  .daily-bar-gradient-dividers{ position:absolute; inset:0; display:flex; }
+  .daily-bar-gradient-dividers > div{ flex:1; border-right:1px solid var(--paper); }
+  .daily-bar-gradient-dividers > div:last-child{ border-right:none; }
+
+  /* Section: past task */
+  .past-item{
+    display:flex; align-items:center; gap:10px;
+    padding:9px 4px;
+    border-top:1px dashed rgba(34,40,59,0.12);
+  }
+  .past-item:first-of-type{border-top:none;}
+  .past-date-tag{
+    font-family:'JetBrains Mono',monospace; font-size:9.5px;
+    color:var(--rule-strong); background:var(--amber-bg);
+    border:1px solid var(--rule); border-radius:10px; padding:2px 7px;
+    white-space:nowrap; flex-shrink:0;
+  }
 
   /* Section 3: today special */
   .special-item{
@@ -627,11 +632,12 @@
       <span class="section-num">02</span>
       <span class="section-title">Daily Task</span>
     </div>
-    <div class="section-sub">Recurring habits. Toggle reminders to get nudged until done.</div>
+    <div class="section-sub">Recurring habits. Add an optional target count to track with a progress bar.</div>
     <div class="card">
       <div id="dailyList"></div>
       <div class="add-row">
         <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
+        <input type="number" id="dailyTargetInput" placeholder="Target (opt.)" min="1" style="max-width:100px;">
         <button class="btn" onclick="addDaily()">Add</button>
       </div>
     </div>
@@ -650,6 +656,18 @@
         <input type="text" id="specialInput" placeholder="e.g. Pick up dry cleaning" onkeydown="if(event.key==='Enter')addSpecial()">
         <button class="btn" onclick="addSpecial()">Add</button>
       </div>
+    </div>
+  </div>
+
+  <!-- PAST TASK: only rendered when there's overdue special-task content -->
+  <div class="section" id="pastTaskSection" style="display:none;">
+    <div class="section-head">
+      <span class="section-num">—</span>
+      <span class="section-title">Past Task</span>
+    </div>
+    <div class="section-sub">Left over from a previous day. Stays here until checked off or removed.</div>
+    <div class="card">
+      <div id="pastTaskList"></div>
     </div>
   </div>
 
@@ -841,7 +859,8 @@ let state = JSON.parse(JSON.stringify({
   lastSeenDay: null,
   timers: [],        // active/paused timers: {id, label, mode:'countdown'|'stopwatch', totalSeconds, remainingSeconds/elapsedSeconds, running, linkedTaskId, linkedTaskLabel, linkedTaskKind}
   timerLog: [],        // completed sessions: {id, label, mode, durationSeconds, completedAt, linkedTaskLabel, action}
-  notes: {}          // dayKey -> free text note for that day (optional, one per day)
+  notes: {},          // dayKey -> free text note for that day (optional, one per day)
+  pastTasks: []        // unfinished Today Special items carried over from a prior day: {id, text, originalDay}
 }));
 
 function load(){
@@ -852,7 +871,7 @@ function load(){
       // Merge onto defaults so older saved data (from before history tracking existed)
       // doesn't wipe out fields it never had, like history/lastSeenDay.
       state = Object.assign({
-        projects: [], daily: [], special: [], future: [], history: {}, lastSeenDay: null, timers: [], timerLog: [], notes: {}
+        projects: [], daily: [], special: [], future: [], history: {}, lastSeenDay: null, timers: [], timerLog: [], notes: {}, pastTasks: []
       }, saved);
       if(!state.history || typeof state.history !== 'object') state.history = {};
       if(!state.notes || typeof state.notes !== 'object') state.notes = {};
@@ -862,6 +881,7 @@ function load(){
       if(!Array.isArray(state.future)) state.future = [];
       if(!Array.isArray(state.timers)) state.timers = [];
       if(!Array.isArray(state.timerLog)) state.timerLog = [];
+      if(!Array.isArray(state.pastTasks)) state.pastTasks = [];
       // Timers can't keep running across a page reload (no background execution in a static page),
       // so any timer that was running gets paused on load rather than silently losing time.
       state.timers.forEach(t => { t.running = false; });
@@ -1064,78 +1084,109 @@ function deleteProject(pid){
 }
 
 // ---------- Section 2: Daily tasks ----------
+const DAILY_COLOR_PALETTE = [
+  {light:'#F6E9D0', dark:'#D9A441'}, // amber
+  {light:'#DEE3EE', dark:'#6C7A9C'}, // blue-gray
+  {light:'#E1EAE2', dark:'#4C7A5E'}, // green
+  {light:'#F6DEDC', dark:'#B4443E'}, // ledger red
+  {light:'#EAE1F2', dark:'#8B5FBF'}, // purple
+  {light:'#DCEEEA', dark:'#3F8F7F'}  // teal
+];
+function dailyColor(d){
+  const idx = (d.colorIndex||0) % DAILY_COLOR_PALETTE.length;
+  return DAILY_COLOR_PALETTE[idx];
+}
+function cycleDailyColor(id){
+  const d = state.daily.find(d=>d.id===id);
+  if(!d) return;
+  d.colorIndex = ((d.colorIndex||0) + 1) % DAILY_COLOR_PALETTE.length;
+  save(); renderDaily();
+}
+
 function addDaily(){
   const input = document.getElementById('dailyInput');
   const text = input.value.trim();
   if(!text) return;
+  const targetRaw = document.getElementById('dailyTargetInput').value;
+  const target = targetRaw ? Math.max(1, parseInt(targetRaw,10)) : null;
   state.daily.push({
     id: uid(), text, done:false,
-    remind:false, startHour:8, endHour:21, everyHours:2
+    target, progress:0,
+    colorIndex: state.daily.length % DAILY_COLOR_PALETTE.length
   });
   input.value='';
+  document.getElementById('dailyTargetInput').value='';
   save(); renderDaily();
 }
+
+function dailyBarHtml(d){
+  if(!d.target) return '';
+  const color = dailyColor(d);
+  if(d.target <= 15){
+    let segs = '';
+    for(let i=0;i<d.target;i++){
+      const filled = i < d.progress;
+      segs += `<div class="daily-bar-seg" style="background:${filled?color.dark:color.light};"></div>`;
+    }
+    return `<div class="daily-bar-segments">${segs}</div>`;
+  } else {
+    const pct = Math.min(100, Math.round((d.progress/d.target)*100));
+    const dividerCount = 10;
+    let dividers = '';
+    for(let i=0;i<dividerCount;i++){ dividers += '<div></div>'; }
+    return `<div class="daily-bar-gradient">
+      <div class="daily-bar-gradient-fill" style="width:${pct}%; background:linear-gradient(90deg, ${color.light}, ${color.dark});"></div>
+      <div class="daily-bar-gradient-dividers">${dividers}</div>
+    </div>`;
+  }
+}
+
 function renderDaily(){
   const el = document.getElementById('dailyList');
   if(state.daily.length===0){ el.innerHTML = '<div class="empty">No daily tasks yet.</div>'; return; }
-  el.innerHTML = state.daily.map(d => `
+  el.innerHTML = state.daily.map(d => {
+    const color = dailyColor(d);
+    const hasTarget = !!d.target;
+    const complete = hasTarget ? (d.progress >= d.target) : d.done;
+    return `
     <div class="daily-item">
-      <button class="check-btn ${d.done?'checked':''}" onclick="toggleDaily('${d.id}')">${d.done?'✓':''}</button>
-      <span class="daily-text ${d.done?'done':''}">${escapeHtml(d.text)}</span>
-      ${timerRecordBadge('daily', d.id)}
-      ${d.remind?'<span class="remind-badge">REMIND</span>':''}
-      <div class="switch ${d.remind?'on':''}" onclick="toggleRemind('${d.id}')"></div>
-      <button class="rm-x" onclick="deleteDaily('${d.id}')">×</button>
+      <div class="daily-item-row">
+        <button class="check-btn ${complete?'checked':''}" onclick="onDailyCheckboxTap('${d.id}')">${complete?'✓':''}</button>
+        <span class="color-dot" style="background:${color.dark};" onclick="cycleDailyColor('${d.id}')" title="Tap to change color"></span>
+        <span class="daily-text ${complete?'done':''}">${escapeHtml(d.text)}</span>
+        ${timerRecordBadge('daily', d.id)}
+        ${hasTarget ? `
+          <button class="daily-count-btn" onclick="adjustDaily('${d.id}',-1)">−</button>
+          <span class="daily-tally ${complete?'complete':''}">${d.progress}/${d.target}</span>
+          <button class="daily-count-btn" onclick="adjustDaily('${d.id}',1)">+</button>
+        ` : ''}
+        <button class="rm-x" onclick="deleteDaily('${d.id}')">×</button>
+      </div>
+      ${dailyBarHtml(d)}
     </div>
-    <div class="reminder-settings ${d.remind?'open':''}" id="rs-${d.id}">
-      <label>Between</label>
-      <input type="number" min="0" max="23" value="${d.startHour}" onchange="updateReminder('${d.id}','startHour',this.value)">
-      <label>and</label>
-      <input type="number" min="0" max="23" value="${d.endHour}" onchange="updateReminder('${d.id}','endHour',this.value)">
-      <label>every</label>
-      <input type="number" min="1" max="12" value="${d.everyHours}" onchange="updateReminder('${d.id}','everyHours',this.value)">
-      <label>hrs</label>
-    </div>
-  `).join('');
+  `;
+  }).join('');
 }
-function toggleDaily(id){
+
+function onDailyCheckboxTap(id){
   const d = state.daily.find(d=>d.id===id);
-  d.done = !d.done;
+  if(!d) return;
+  if(d.target){
+    d.progress = Math.min(d.target, d.progress + 1);
+  } else {
+    d.done = !d.done;
+  }
   save(); renderDaily();
 }
-function toggleRemind(id){
+function adjustDaily(id, delta){
   const d = state.daily.find(d=>d.id===id);
-  d.remind = !d.remind;
+  if(!d || !d.target) return;
+  d.progress = Math.max(0, Math.min(d.target, d.progress + delta));
   save(); renderDaily();
-}
-function updateReminder(id, field, val){
-  const d = state.daily.find(d=>d.id===id);
-  d[field] = parseInt(val,10);
-  save();
 }
 function deleteDaily(id){
   state.daily = state.daily.filter(d=>d.id!==id);
   save(); renderDaily();
-}
-
-// in-app reminder loop (browser tab must be open)
-setInterval(()=>{
-  const now = new Date();
-  const hour = now.getHours();
-  state.daily.forEach(d=>{
-    if(d.remind && !d.done && hour>=d.startHour && hour<=d.endHour){
-      if(!d._lastPing || (Date.now()-d._lastPing) >= d.everyHours*3600*1000){
-        d._lastPing = Date.now();
-        if(Notification && Notification.permission==='granted'){
-          new Notification('Reminder', {body: d.text});
-        }
-      }
-    }
-  });
-}, 60000);
-if(window.Notification && Notification.permission==='default'){
-  // ask quietly, non-blocking
-  Notification.requestPermission().catch(()=>{});
 }
 
 // ---------- Section 3: Today Special ----------
@@ -1169,6 +1220,44 @@ function deleteSpecial(id){
   state.special = state.special.filter(s=>s.id!==id);
   save(); renderSpecial();
 }
+
+// ---------- Past Task ----------
+// Formats a dayKey like "2026-08-20" into a short tag like "Aug 20"
+function shortDateTag(key){
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y,m-1,d).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+function renderPastTasks(){
+  const section = document.getElementById('pastTaskSection');
+  const el = document.getElementById('pastTaskList');
+  if(state.pastTasks.length===0){
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+  el.innerHTML = state.pastTasks.map(p => `
+    <div class="past-item">
+      <button class="check-btn" onclick="completePastTask('${p.id}')"></button>
+      <span style="flex:1; font-size:14px; font-weight:500;">${escapeHtml(p.text)}</span>
+      <span class="past-date-tag">${shortDateTag(p.originalDay)}</span>
+      <button class="rm-x" onclick="requestDeletePastTask('${p.id}')">×</button>
+    </div>
+  `).join('');
+}
+function completePastTask(id){
+  // Finishing it here only removes it from the active Past Task list.
+  // Its original day in history/Calendar already recorded it as incomplete and stays that way.
+  state.pastTasks = state.pastTasks.filter(p=>p.id!==id);
+  save(); renderPastTasks();
+}
+function requestDeletePastTask(id){
+  // Immediate delete, no confirmation prompt: this only stops tracking the item
+  // going forward and never touches its original day's record either way, so
+  // it's low-stakes -- matches the "let it go" framing rather than adding friction.
+  state.pastTasks = state.pastTasks.filter(p=>p.id!==id);
+  save(); renderPastTasks();
+}
+
 function dayKey(d=new Date()){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
@@ -1186,7 +1275,8 @@ function checkDayRollover(){
 
   const prevDay = state.lastSeenDay;
 
-  // Archive snapshot of the previous day
+  // Archive snapshot of the previous day. Daily tasks may be target-based (progress/target)
+  // or plain checkboxes (done) -- record completion correctly either way.
   state.history[prevDay] = {
     projects: state.projects.map(p => ({
       name: p.name,
@@ -1196,15 +1286,27 @@ function checkDayRollover(){
         done: t.limit ? (t.progress >= t.limit) : t.done
       }))
     })),
-    daily: state.daily.map(d => ({ text: d.text, done: d.done })),
+    daily: state.daily.map(d => ({
+      text: d.text,
+      done: d.target ? (d.progress >= d.target) : d.done
+    })),
     special: state.special.filter(s => s.addedToday === prevDay).map(s => ({ text: s.text, done: s.done }))
   };
 
   // Reset daily-cycle progress for the new day (projects & daily habits repeat each day)
   state.projects.forEach(p => p.tasks.forEach(t => { t.progress = 0; t.done = false; }));
-  state.daily.forEach(d => { d.done = false; });
+  state.daily.forEach(d => { d.done = false; if(d.target) d.progress = 0; });
 
-  // Drop special items from before today (history already has them archived)
+  // Any Today Special item from the previous day that was never completed moves into
+  // Past Task instead of just disappearing. It keeps its original day so completing it
+  // later never rewrites what the Progress Tracker / Calendar already recorded for that day.
+  const unfinished = state.special.filter(s => s.addedToday === prevDay && !s.done);
+  unfinished.forEach(s => {
+    state.pastTasks.push({ id: uid(), text: s.text, originalDay: prevDay });
+  });
+
+  // Drop special items from before today (history already has them archived,
+  // and unfinished ones now live in pastTasks instead)
   state.special = state.special.filter(s => s.addedToday === today);
 
   state.lastSeenDay = today;
@@ -2039,12 +2141,13 @@ renderDaily();
 renderSpecial();
 renderFutureChips();
 renderFuture();
+renderPastTasks();
 loadManuscriptForToday();
 
 // re-check rollover periodically in case the tab stays open past midnight
 setInterval(()=>{
   checkDayRollover();
-  renderProjects(); renderDaily(); renderSpecial(); renderFuture(); renderStamp(); loadManuscriptForToday();
+  renderProjects(); renderDaily(); renderSpecial(); renderFuture(); renderPastTasks(); renderStamp(); loadManuscriptForToday();
 }, 5*60000);
 
 // ---------- PWA: register service worker ----------
