@@ -133,6 +133,20 @@
     text-transform:uppercase;
     letter-spacing:.04em;
   }
+  .subsection{
+    margin-top:22px;
+    padding-top:18px;
+    border-top:1px dashed rgba(34,40,59,0.14);
+  }
+  .subsection:first-of-type{ margin-top:8px; }
+  .subsection-head{
+    display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  }
+  .subsection-title{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px; font-weight:700; color:var(--ink-soft);
+    text-transform:uppercase; letter-spacing:.03em;
+  }
   .section-sub{
     font-size:12.5px;
     color:var(--pencil);
@@ -665,109 +679,113 @@
     </div>
   </div>
 
-  <!-- SECTION 2 -->
+  <!-- SECTION 2: Recurring Tasks — parent umbrella over three sub-sections -->
   <div class="section">
     <div class="section-head">
       <span class="section-num">02</span>
-      <span class="section-title">Daily Habits</span>
+      <span class="section-title">Recurring Tasks</span>
     </div>
-    <div class="section-sub">Every day, no schedule needed. Add an optional target count to track with a progress bar.</div>
-    <div class="card">
-      <div id="dailyList"></div>
-      <div class="add-row">
-        <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
-        <input type="number" id="dailyTargetInput" placeholder="Target (opt.)" min="1" style="max-width:100px;">
-      </div>
-      <div style="display:flex; gap:8px; margin:8px 0;">
-        <button class="chip active" id="habitLifeForeverBtn" onclick="setHabitLifespanMode('forever')">Forever</button>
-        <button class="chip" id="habitLifeCustomBtn" onclick="setHabitLifespanMode('custom')">Custom days</button>
-      </div>
-      <div id="habitCustomDaysRow" style="display:none; align-items:center; gap:8px; margin-bottom:8px;">
-        <span style="font-size:11.5px; color:var(--pencil);">runs for</span>
-        <input type="number" id="habitCustomDaysInput" min="1" value="21" style="max-width:70px;">
-        <span style="font-size:11.5px; color:var(--pencil);">days, then stops</span>
-      </div>
-      <button class="btn" onclick="addDaily()">Add</button>
-    </div>
-  </div>
+    <div class="section-sub">Anything that repeats, grouped by how often — every day, on chosen weekdays, or on a specific date.</div>
 
-  <!-- WEEKLY ROUTINE: repeats on chosen weekdays. Hidden from view on days it isn't due;
-       "show all" reveals the full list (including not-due-today items) for review/editing. -->
-  <div class="section">
-    <div class="section-head">
-      <span class="section-num">—</span>
-      <span class="section-title">Weekly Routine</span>
-      <button class="show-all-toggle" id="weeklyShowAllBtn" onclick="toggleWeeklyShowAll()">Show all</button>
+    <div class="subsection">
+      <div class="subsection-head">
+        <span class="subsection-title">Daily Habits</span>
+      </div>
+      <div class="card">
+        <div id="dailyList"></div>
+        <div class="add-row">
+          <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
+          <input type="number" id="dailyTargetInput" placeholder="Target (opt.)" min="1" style="max-width:100px;">
+        </div>
+        <div style="display:flex; gap:8px; margin:8px 0;">
+          <button class="chip active" id="habitLifeForeverBtn" onclick="setHabitLifespanMode('forever')">Forever</button>
+          <button class="chip" id="habitLifeCustomBtn" onclick="setHabitLifespanMode('custom')">Custom days</button>
+        </div>
+        <div id="habitCustomDaysRow" style="display:none; align-items:center; gap:8px; margin-bottom:8px;">
+          <span style="font-size:11.5px; color:var(--pencil);">runs for</span>
+          <input type="number" id="habitCustomDaysInput" min="1" value="21" style="max-width:70px;">
+          <span style="font-size:11.5px; color:var(--pencil);">days, then stops</span>
+        </div>
+        <button class="btn" onclick="addDaily()">Add</button>
+      </div>
     </div>
-    <div class="section-sub">Repeats on chosen days of the week. Only shows here on a day it's actually due.</div>
-    <div class="card">
-      <div id="weeklyList"></div>
-      <button class="new-project-toggle" onclick="toggleNewWeeklyForm()">+ New weekly routine task</button>
-      <div class="new-project-form" id="newWeeklyForm">
-        <input type="text" id="weeklyNameInput" placeholder="Task name — e.g. Gym session">
-        <input type="number" id="weeklyTargetInput" placeholder="Target (opt.)" min="1">
-        <div class="weekday-picker" id="weeklyWeekdayPicker"></div>
-        <div style="display:flex; gap:8px;">
-          <button class="chip active" id="weeklyLifeForeverBtn" onclick="setWeeklyLifespanMode('forever')">Forever</button>
-          <button class="chip" id="weeklyLifeUntilBtn" onclick="setWeeklyLifespanMode('until')">Until date</button>
-          <button class="chip" id="weeklyLifeOccBtn" onclick="setWeeklyLifespanMode('occurrences')">Number of times</button>
-        </div>
-        <div id="weeklyUntilRow" style="display:none;">
-          <input type="date" id="weeklyUntilInput">
-        </div>
-        <div id="weeklyOccRow" style="display:none; align-items:center; gap:8px;">
-          <span style="font-size:11.5px; color:var(--pencil);">repeat</span>
-          <input type="number" id="weeklyOccInput" min="1" value="8" style="max-width:70px;">
-          <span style="font-size:11.5px; color:var(--pencil);">more times</span>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:4px;">
-          <button class="btn" onclick="saveNewWeekly()">Save</button>
-          <button class="btn subtle" onclick="toggleNewWeeklyForm()">Cancel</button>
+
+    <!-- WEEKLY ROUTINE: repeats on chosen weekdays. Hidden from view on days it isn't due;
+         "show all" reveals the full list (including not-due-today items) for review/editing. -->
+    <div class="subsection">
+      <div class="subsection-head">
+        <span class="subsection-title">Weekly Routine</span>
+        <button class="show-all-toggle" id="weeklyShowAllBtn" onclick="toggleWeeklyShowAll()">Show all</button>
+      </div>
+      <div class="section-sub" style="margin-top:-4px;">Repeats on chosen days of the week. Only shows here on a day it's actually due.</div>
+      <div class="card">
+        <div id="weeklyList"></div>
+        <button class="new-project-toggle" onclick="toggleNewWeeklyForm()">+ New weekly routine task</button>
+        <div class="new-project-form" id="newWeeklyForm">
+          <input type="text" id="weeklyNameInput" placeholder="Task name — e.g. Gym session">
+          <input type="number" id="weeklyTargetInput" placeholder="Target (opt.)" min="1">
+          <div class="weekday-picker" id="weeklyWeekdayPicker"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="chip active" id="weeklyLifeForeverBtn" onclick="setWeeklyLifespanMode('forever')">Forever</button>
+            <button class="chip" id="weeklyLifeUntilBtn" onclick="setWeeklyLifespanMode('until')">Until date</button>
+            <button class="chip" id="weeklyLifeOccBtn" onclick="setWeeklyLifespanMode('occurrences')">Number of times</button>
+          </div>
+          <div id="weeklyUntilRow" style="display:none;">
+            <input type="date" id="weeklyUntilInput">
+          </div>
+          <div id="weeklyOccRow" style="display:none; align-items:center; gap:8px;">
+            <span style="font-size:11.5px; color:var(--pencil);">repeat</span>
+            <input type="number" id="weeklyOccInput" min="1" value="8" style="max-width:70px;">
+            <span style="font-size:11.5px; color:var(--pencil);">more times</span>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn" onclick="saveNewWeekly()">Save</button>
+            <button class="btn subtle" onclick="toggleNewWeeklyForm()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- RECURRING DATES: a specific day-of-month or day-of-year, repeating. On its due date
-       it surfaces into Today Special rather than living here day-to-day. -->
-  <div class="section">
-    <div class="section-head">
-      <span class="section-num">—</span>
-      <span class="section-title">Recurring Dates</span>
-      <button class="show-all-toggle" id="datedShowAllBtn" onclick="toggleDatedShowAll()">Show all</button>
-    </div>
-    <div class="section-sub">A specific date each month or year — e.g. the 1st, or March 3rd. Appears in Today Special when its day comes.</div>
-    <div class="card">
-      <div id="datedList"></div>
-      <button class="new-project-toggle" onclick="toggleNewDatedForm()">+ New recurring date task</button>
-      <div class="new-project-form" id="newDatedForm">
-        <input type="text" id="datedNameInput" placeholder="Task name — e.g. Pay rent">
-        <div style="display:flex; gap:8px;">
-          <button class="chip active" id="datedMonthlyBtn" onclick="setDatedRecurrence('monthly')">Monthly</button>
-          <button class="chip" id="datedYearlyBtn" onclick="setDatedRecurrence('yearly')">Yearly</button>
-        </div>
-        <div id="datedDatesList" class="subtask-list"></div>
-        <div id="datedAddRow" style="display:flex; gap:6px; align-items:center;">
-          <input type="number" id="datedMonthInput" placeholder="Month" min="1" max="12" style="display:none; max-width:70px;">
-          <input type="number" id="datedDayInput" placeholder="Day" min="1" max="31" style="max-width:70px;">
-          <button class="btn small ghost" onclick="addDatedDateDraft()">Add date</button>
-        </div>
-        <div style="display:flex; gap:8px;">
-          <button class="chip active" id="datedLifeForeverBtn" onclick="setDatedLifespanMode('forever')">Forever</button>
-          <button class="chip" id="datedLifeUntilBtn" onclick="setDatedLifespanMode('until')">Until date</button>
-          <button class="chip" id="datedLifeOccBtn" onclick="setDatedLifespanMode('occurrences')">Number of times</button>
-        </div>
-        <div id="datedUntilRow" style="display:none;">
-          <input type="date" id="datedUntilInput">
-        </div>
-        <div id="datedOccRow" style="display:none; align-items:center; gap:8px;">
-          <span style="font-size:11.5px; color:var(--pencil);">repeat</span>
-          <input type="number" id="datedOccInput" min="1" value="3" style="max-width:70px;">
-          <span style="font-size:11.5px; color:var(--pencil);">more times</span>
-        </div>
-        <div style="display:flex; gap:8px; margin-top:4px;">
-          <button class="btn" onclick="saveNewDated()">Save</button>
-          <button class="btn subtle" onclick="toggleNewDatedForm()">Cancel</button>
+    <!-- RECURRING DATES: a specific day-of-month or day-of-year, repeating. On its due date
+         it surfaces into Today Special rather than living here day-to-day. -->
+    <div class="subsection">
+      <div class="subsection-head">
+        <span class="subsection-title">Recurring Dates</span>
+        <button class="show-all-toggle" id="datedShowAllBtn" onclick="toggleDatedShowAll()">Show all</button>
+      </div>
+      <div class="section-sub" style="margin-top:-4px;">A specific date each month or year — e.g. the 1st, or March 3rd. Appears in Today Special when its day comes.</div>
+      <div class="card">
+        <div id="datedList"></div>
+        <button class="new-project-toggle" onclick="toggleNewDatedForm()">+ New recurring date task</button>
+        <div class="new-project-form" id="newDatedForm">
+          <input type="text" id="datedNameInput" placeholder="Task name — e.g. Pay rent">
+          <div style="display:flex; gap:8px;">
+            <button class="chip active" id="datedMonthlyBtn" onclick="setDatedRecurrence('monthly')">Monthly</button>
+            <button class="chip" id="datedYearlyBtn" onclick="setDatedRecurrence('yearly')">Yearly</button>
+          </div>
+          <div id="datedDatesList" class="subtask-list"></div>
+          <div id="datedAddRow" style="display:flex; gap:6px; align-items:center;">
+            <input type="number" id="datedMonthInput" placeholder="Month" min="1" max="12" style="display:none; max-width:70px;">
+            <input type="number" id="datedDayInput" placeholder="Day" min="1" max="31" style="max-width:70px;">
+            <button class="btn small ghost" onclick="addDatedDateDraft()">Add date</button>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="chip active" id="datedLifeForeverBtn" onclick="setDatedLifespanMode('forever')">Forever</button>
+            <button class="chip" id="datedLifeUntilBtn" onclick="setDatedLifespanMode('until')">Until date</button>
+            <button class="chip" id="datedLifeOccBtn" onclick="setDatedLifespanMode('occurrences')">Number of times</button>
+          </div>
+          <div id="datedUntilRow" style="display:none;">
+            <input type="date" id="datedUntilInput">
+          </div>
+          <div id="datedOccRow" style="display:none; align-items:center; gap:8px;">
+            <span style="font-size:11.5px; color:var(--pencil);">repeat</span>
+            <input type="number" id="datedOccInput" min="1" value="3" style="max-width:70px;">
+            <span style="font-size:11.5px; color:var(--pencil);">more times</span>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn" onclick="saveNewDated()">Save</button>
+            <button class="btn subtle" onclick="toggleNewDatedForm()">Cancel</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1144,6 +1162,7 @@ function renderTaskRow(pid, t){
         <span class="tally ${complete?'complete':''}">${t.progress}/${t.limit}</span>
         ${t.progress>0?`<button class="counter-btn" style="background:transparent;color:var(--pencil);border-color:var(--pencil);" onclick="stepDown('${pid}','${t.id}')">−</button>`:''}
         <button class="counter-btn" onclick="openLimitModal('${pid}','${t.id}')">${complete?'✓':'+'}</button>
+        <button class="edit-btn" onclick="openEditProjectTaskModal('${pid}','${t.id}')" title="Edit">✎</button>
       </div>
     `;
   } else {
@@ -1152,9 +1171,36 @@ function renderTaskRow(pid, t){
         <button class="check-btn ${t.done?'checked':''}" onclick="toggleSimpleTask('${pid}','${t.id}')">${t.done?'✓':''}</button>
         <span class="task-name ${t.done?'done':''}">${escapeHtml(t.name)}</span>
         ${timerRecordBadge('project', t.id)}
+        <button class="edit-btn" onclick="openEditProjectTaskModal('${pid}','${t.id}')" title="Edit">✎</button>
       </div>
     `;
   }
+}
+
+function openEditProjectTaskModal(pid, tid){
+  const {t} = findTask(pid, tid);
+  if(!t) return;
+  document.getElementById('confirmMessage').innerHTML = 'Edit task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editProjTaskName" value="${escapeHtml(t.name)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:8px;">
+    <input type="number" id="editProjTaskLimit" placeholder="Limit (opt.)" min="1" value="${t.limit||''}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:10px;">
+    <button class="modal-btn" id="editProjTaskSaveBtn">Save</button>
+    <button class="btn subtle small" id="editProjTaskCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('editProjTaskSaveBtn').onclick = ()=>{
+    const name = document.getElementById('editProjTaskName').value.trim();
+    if(!name) return;
+    t.name = name;
+    const limitRaw = document.getElementById('editProjTaskLimit').value;
+    const newLimit = limitRaw ? Math.max(1, parseInt(limitRaw,10)) : null;
+    if(newLimit !== t.limit){ t.limit = newLimit; t.progress = 0; t.done = false; }
+    save(); renderProjects();
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+  document.getElementById('editProjTaskCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
 }
 
 function findTask(pid, tid){
@@ -1782,6 +1828,7 @@ function renderSpecial(){
       <button class="check-btn ${s.done?'checked':''}" onclick="toggleSpecial('${s.id}')">${s.done?'✓':''}</button>
       <span class="daily-text ${s.done?'done':''}" style="flex:1;">${escapeHtml(s.text)}</span>
       ${timerRecordBadge('special', s.id)}
+      <button class="edit-btn" onclick="openEditSpecialModal('${s.id}')" title="Edit">✎</button>
       <button class="rm-x" onclick="deleteSpecial('${s.id}')">×</button>
     </div>
   `).join('');
@@ -1794,6 +1841,27 @@ function toggleSpecial(id){
 function deleteSpecial(id){
   state.special = state.special.filter(s=>s.id!==id);
   save(); renderSpecial();
+}
+function openEditSpecialModal(id){
+  const s = state.special.find(s=>s.id===id);
+  if(!s) return;
+  document.getElementById('confirmMessage').innerHTML = 'Edit task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editSpecialName" value="${escapeHtml(s.text)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:10px;">
+    <button class="modal-btn" id="editSpecialSaveBtn">Save</button>
+    <button class="btn subtle small" id="editSpecialCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('editSpecialSaveBtn').onclick = ()=>{
+    const name = document.getElementById('editSpecialName').value.trim();
+    if(!name) return;
+    s.text = name;
+    save(); renderSpecial();
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+  document.getElementById('editSpecialCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
 }
 
 // ---------- Past Task ----------
@@ -1815,10 +1883,32 @@ function renderPastTasks(){
       <button class="check-btn" onclick="completePastTask('${p.id}')"></button>
       <span style="flex:1; font-size:14px; font-weight:500;">${escapeHtml(p.text)}</span>
       <span class="past-date-tag">${shortDateTag(p.originalDay)}</span>
+      <button class="edit-btn" onclick="openEditPastTaskModal('${p.id}')" title="Edit">✎</button>
       <button class="reschedule-btn" onclick="openRescheduleModal('${p.id}')" title="Reschedule to a future date">📅</button>
       <button class="rm-x" onclick="requestDeletePastTask('${p.id}')">×</button>
     </div>
   `).join('');
+}
+function openEditPastTaskModal(id){
+  const p = state.pastTasks.find(p=>p.id===id);
+  if(!p) return;
+  document.getElementById('confirmMessage').innerHTML = 'Edit past task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editPastTaskName" value="${escapeHtml(p.text)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:10px;">
+    <button class="modal-btn" id="editPastTaskSaveBtn">Save</button>
+    <button class="btn subtle small" id="editPastTaskCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('editPastTaskSaveBtn').onclick = ()=>{
+    const name = document.getElementById('editPastTaskName').value.trim();
+    if(!name) return;
+    p.text = name;
+    save(); renderPastTasks();
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+  document.getElementById('editPastTaskCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
 }
 
 // Optional reschedule: instead of completing or deleting a past task, push it
@@ -2015,6 +2105,7 @@ function renderFuture(){
       ${items.map(f=>`
         <div class="future-item">
           <span style="flex:1;">${escapeHtml(f.text)}</span>
+          <button class="edit-btn" onclick="openEditFutureModal('${f.id}')" title="Edit">✎</button>
           <button class="rm-x" onclick="deleteFuture('${f.id}')">×</button>
         </div>
       `).join('')}
@@ -2024,6 +2115,32 @@ function renderFuture(){
 function deleteFuture(id){
   state.future = state.future.filter(f=>f.id!==id);
   save(); renderFuture();
+}
+function openEditFutureModal(id){
+  const f = state.future.find(f=>f.id===id);
+  if(!f) return;
+  document.getElementById('confirmMessage').innerHTML = 'Edit future task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editFutureName" value="${escapeHtml(f.text)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:8px;">
+    <input type="date" id="editFutureDate" value="${f.dueKey}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:10px;">
+    <button class="modal-btn" id="editFutureSaveBtn">Save</button>
+    <button class="btn subtle small" id="editFutureCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('editFutureSaveBtn').onclick = ()=>{
+    const name = document.getElementById('editFutureName').value.trim();
+    const dateVal = document.getElementById('editFutureDate').value;
+    if(!name || !dateVal) return;
+    f.text = name;
+    f.dueKey = dateVal;
+    const [y,m,d] = dateVal.split('-').map(Number);
+    f.dueLabel = new Date(y,m-1,d).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+    save(); renderFuture();
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+  document.getElementById('editFutureCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
 }
 
 // ---------- utils ----------
