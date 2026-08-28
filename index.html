@@ -385,6 +385,32 @@
     background:none; border:none; cursor:pointer; font-size:14px;
     padding:2px 4px; flex-shrink:0; line-height:1;
   }
+  .show-all-toggle{
+    margin-left:auto; font-family:'JetBrains Mono',monospace; font-size:10px; font-weight:700;
+    color:var(--pencil); background:transparent; border:1px solid var(--rule);
+    border-radius:10px; padding:3px 9px; cursor:pointer;
+  }
+  .show-all-toggle.active{ background:var(--rule-strong); color:#fff; border-color:var(--rule-strong); }
+  .weekday-picker{ display:flex; gap:4px; }
+  .weekday-btn{
+    flex:1; text-align:center; font-family:'JetBrains Mono',monospace; font-size:11px;
+    padding:7px 0; border-radius:5px; border:1px solid var(--rule); background:transparent;
+    color:var(--pencil); cursor:pointer;
+  }
+  .weekday-btn.active{ background:var(--rule-strong); color:#fff; border-color:var(--rule-strong); }
+  .lifespan-badge{
+    font-family:'JetBrains Mono',monospace; font-size:9px; color:var(--pencil);
+    background:var(--paper-2); border-radius:10px; padding:2px 7px; white-space:nowrap;
+  }
+  .edit-btn{
+    background:none; border:none; cursor:pointer; font-size:13px; color:var(--pencil);
+    padding:2px 4px; flex-shrink:0; line-height:1;
+  }
+  .dated-date-chip{
+    font-family:'JetBrains Mono',monospace; font-size:11px; background:var(--amber-bg);
+    border:1px solid var(--rule); border-radius:12px; padding:4px 10px;
+    display:inline-flex; align-items:center; gap:6px; margin:2px 4px 2px 0;
+  }
 
   /* Section 3: today special */
   .special-item{
@@ -643,15 +669,106 @@
   <div class="section">
     <div class="section-head">
       <span class="section-num">02</span>
-      <span class="section-title">Daily Task</span>
+      <span class="section-title">Daily Habits</span>
     </div>
-    <div class="section-sub">Recurring habits. Add an optional target count to track with a progress bar.</div>
+    <div class="section-sub">Every day, no schedule needed. Add an optional target count to track with a progress bar.</div>
     <div class="card">
       <div id="dailyList"></div>
       <div class="add-row">
         <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
         <input type="number" id="dailyTargetInput" placeholder="Target (opt.)" min="1" style="max-width:100px;">
-        <button class="btn" onclick="addDaily()">Add</button>
+      </div>
+      <div style="display:flex; gap:8px; margin:8px 0;">
+        <button class="chip active" id="habitLifeForeverBtn" onclick="setHabitLifespanMode('forever')">Forever</button>
+        <button class="chip" id="habitLifeCustomBtn" onclick="setHabitLifespanMode('custom')">Custom days</button>
+      </div>
+      <div id="habitCustomDaysRow" style="display:none; align-items:center; gap:8px; margin-bottom:8px;">
+        <span style="font-size:11.5px; color:var(--pencil);">runs for</span>
+        <input type="number" id="habitCustomDaysInput" min="1" value="21" style="max-width:70px;">
+        <span style="font-size:11.5px; color:var(--pencil);">days, then stops</span>
+      </div>
+      <button class="btn" onclick="addDaily()">Add</button>
+    </div>
+  </div>
+
+  <!-- WEEKLY ROUTINE: repeats on chosen weekdays. Hidden from view on days it isn't due;
+       "show all" reveals the full list (including not-due-today items) for review/editing. -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">—</span>
+      <span class="section-title">Weekly Routine</span>
+      <button class="show-all-toggle" id="weeklyShowAllBtn" onclick="toggleWeeklyShowAll()">Show all</button>
+    </div>
+    <div class="section-sub">Repeats on chosen days of the week. Only shows here on a day it's actually due.</div>
+    <div class="card">
+      <div id="weeklyList"></div>
+      <button class="new-project-toggle" onclick="toggleNewWeeklyForm()">+ New weekly routine task</button>
+      <div class="new-project-form" id="newWeeklyForm">
+        <input type="text" id="weeklyNameInput" placeholder="Task name — e.g. Gym session">
+        <input type="number" id="weeklyTargetInput" placeholder="Target (opt.)" min="1">
+        <div class="weekday-picker" id="weeklyWeekdayPicker"></div>
+        <div style="display:flex; gap:8px;">
+          <button class="chip active" id="weeklyLifeForeverBtn" onclick="setWeeklyLifespanMode('forever')">Forever</button>
+          <button class="chip" id="weeklyLifeUntilBtn" onclick="setWeeklyLifespanMode('until')">Until date</button>
+          <button class="chip" id="weeklyLifeOccBtn" onclick="setWeeklyLifespanMode('occurrences')">Number of times</button>
+        </div>
+        <div id="weeklyUntilRow" style="display:none;">
+          <input type="date" id="weeklyUntilInput">
+        </div>
+        <div id="weeklyOccRow" style="display:none; align-items:center; gap:8px;">
+          <span style="font-size:11.5px; color:var(--pencil);">repeat</span>
+          <input type="number" id="weeklyOccInput" min="1" value="8" style="max-width:70px;">
+          <span style="font-size:11.5px; color:var(--pencil);">more times</span>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="btn" onclick="saveNewWeekly()">Save</button>
+          <button class="btn subtle" onclick="toggleNewWeeklyForm()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECURRING DATES: a specific day-of-month or day-of-year, repeating. On its due date
+       it surfaces into Today Special rather than living here day-to-day. -->
+  <div class="section">
+    <div class="section-head">
+      <span class="section-num">—</span>
+      <span class="section-title">Recurring Dates</span>
+      <button class="show-all-toggle" id="datedShowAllBtn" onclick="toggleDatedShowAll()">Show all</button>
+    </div>
+    <div class="section-sub">A specific date each month or year — e.g. the 1st, or March 3rd. Appears in Today Special when its day comes.</div>
+    <div class="card">
+      <div id="datedList"></div>
+      <button class="new-project-toggle" onclick="toggleNewDatedForm()">+ New recurring date task</button>
+      <div class="new-project-form" id="newDatedForm">
+        <input type="text" id="datedNameInput" placeholder="Task name — e.g. Pay rent">
+        <div style="display:flex; gap:8px;">
+          <button class="chip active" id="datedMonthlyBtn" onclick="setDatedRecurrence('monthly')">Monthly</button>
+          <button class="chip" id="datedYearlyBtn" onclick="setDatedRecurrence('yearly')">Yearly</button>
+        </div>
+        <div id="datedDatesList" class="subtask-list"></div>
+        <div id="datedAddRow" style="display:flex; gap:6px; align-items:center;">
+          <input type="number" id="datedMonthInput" placeholder="Month" min="1" max="12" style="display:none; max-width:70px;">
+          <input type="number" id="datedDayInput" placeholder="Day" min="1" max="31" style="max-width:70px;">
+          <button class="btn small ghost" onclick="addDatedDateDraft()">Add date</button>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button class="chip active" id="datedLifeForeverBtn" onclick="setDatedLifespanMode('forever')">Forever</button>
+          <button class="chip" id="datedLifeUntilBtn" onclick="setDatedLifespanMode('until')">Until date</button>
+          <button class="chip" id="datedLifeOccBtn" onclick="setDatedLifespanMode('occurrences')">Number of times</button>
+        </div>
+        <div id="datedUntilRow" style="display:none;">
+          <input type="date" id="datedUntilInput">
+        </div>
+        <div id="datedOccRow" style="display:none; align-items:center; gap:8px;">
+          <span style="font-size:11.5px; color:var(--pencil);">repeat</span>
+          <input type="number" id="datedOccInput" min="1" value="3" style="max-width:70px;">
+          <span style="font-size:11.5px; color:var(--pencil);">more times</span>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="btn" onclick="saveNewDated()">Save</button>
+          <button class="btn subtle" onclick="toggleNewDatedForm()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -873,7 +990,9 @@ let state = JSON.parse(JSON.stringify({
   timers: [],        // active/paused timers: {id, label, mode:'countdown'|'stopwatch', totalSeconds, remainingSeconds/elapsedSeconds, running, linkedTaskId, linkedTaskLabel, linkedTaskKind}
   timerLog: [],        // completed sessions: {id, label, mode, durationSeconds, completedAt, linkedTaskLabel, action}
   notes: {},          // dayKey -> free text note for that day (optional, one per day)
-  pastTasks: []        // unfinished Today Special items carried over from a prior day: {id, text, originalDay}
+  pastTasks: [],        // unfinished Today Special items carried over from a prior day: {id, text, originalDay}
+  weekly: [],          // Weekly Routine tasks: {id, text, target, progress, done, colorIndex, weekdays:[0-6], lifespan}
+  dated: []            // Recurring Dates tasks: {id, text, recurrence:'monthly'|'yearly', dates:[{month,day}], lifespan, lastPromotedKey}
 }));
 
 function load(){
@@ -884,7 +1003,7 @@ function load(){
       // Merge onto defaults so older saved data (from before history tracking existed)
       // doesn't wipe out fields it never had, like history/lastSeenDay.
       state = Object.assign({
-        projects: [], daily: [], special: [], future: [], history: {}, lastSeenDay: null, timers: [], timerLog: [], notes: {}, pastTasks: []
+        projects: [], daily: [], special: [], future: [], history: {}, lastSeenDay: null, timers: [], timerLog: [], notes: {}, pastTasks: [], weekly: [], dated: []
       }, saved);
       if(!state.history || typeof state.history !== 'object') state.history = {};
       if(!state.notes || typeof state.notes !== 'object') state.notes = {};
@@ -895,6 +1014,11 @@ function load(){
       if(!Array.isArray(state.timers)) state.timers = [];
       if(!Array.isArray(state.timerLog)) state.timerLog = [];
       if(!Array.isArray(state.pastTasks)) state.pastTasks = [];
+      if(!Array.isArray(state.weekly)) state.weekly = [];
+      if(!Array.isArray(state.dated)) state.dated = [];
+      // Older saved daily-habit entries predate the lifespan field -- default them to
+      // Forever so they keep behaving exactly as they did before this update.
+      state.daily.forEach(d => { if(!d.lifespan) d.lifespan = {type:'forever'}; });
       // Timers can't keep running across a page reload (no background execution in a static page),
       // so any timer that was running gets paused on load rather than silently losing time.
       state.timers.forEach(t => { t.running = false; });
@@ -1126,8 +1250,10 @@ function hexInterpolate(hexA, hexB, t){
 }
 
 let colorPickerTaskId = null;
-function openColorPicker(id){
+let colorPickerCollection = 'daily';
+function openColorPicker(id, collection){
   colorPickerTaskId = id;
+  colorPickerCollection = collection || 'daily';
   const grid = DAILY_COLOR_PALETTE.map((c,i)=>
     `<button class="palette-swatch" style="background:${c.dark};" onclick="pickDailyColor(${i})" aria-label="color option"></button>`
   ).join('');
@@ -1143,29 +1269,77 @@ function openColorPicker(id){
   };
 }
 function pickDailyColor(paletteIndex){
-  const d = state.daily.find(d=>d.id===colorPickerTaskId);
+  const collection = colorPickerCollection==='weekly' ? state.weekly : state.daily;
+  const d = collection.find(d=>d.id===colorPickerTaskId);
   if(d){
     d.colorIndex = paletteIndex;
-    save(); renderDaily();
+    save();
+    if(colorPickerCollection==='weekly') renderWeekly(); else renderDaily();
   }
   document.getElementById('confirmOverlay').classList.remove('open');
   colorPickerTaskId = null;
 }
 
+let habitLifespanMode = 'forever';
+function setHabitLifespanMode(mode){
+  habitLifespanMode = mode;
+  document.getElementById('habitLifeForeverBtn').classList.toggle('active', mode==='forever');
+  document.getElementById('habitLifeCustomBtn').classList.toggle('active', mode==='custom');
+  document.getElementById('habitCustomDaysRow').style.display = mode==='custom' ? 'flex' : 'none';
+}
 function addDaily(){
   const input = document.getElementById('dailyInput');
   const text = input.value.trim();
   if(!text) return;
   const targetRaw = document.getElementById('dailyTargetInput').value;
   const target = targetRaw ? Math.max(1, parseInt(targetRaw,10)) : null;
+  let lifespan = {type:'forever'};
+  if(habitLifespanMode==='custom'){
+    const days = Math.max(1, parseInt(document.getElementById('habitCustomDaysInput').value,10) || 21);
+    lifespan = {type:'days', days, startDay: dayKey()};
+  }
   state.daily.push({
     id: uid(), text, done:false,
     target, progress:0,
-    colorIndex: state.daily.length % DAILY_COLOR_PALETTE.length
+    colorIndex: state.daily.length % DAILY_COLOR_PALETTE.length,
+    lifespan
   });
   input.value='';
   document.getElementById('dailyTargetInput').value='';
+  setHabitLifespanMode('forever');
   save(); renderDaily();
+}
+
+// Returns true once a task's lifespan has run out. Expired tasks are hidden from view
+// but never deleted -- their history stays exactly as it happened.
+function isLifespanExpired(lifespan, todayKey){
+  if(!lifespan || lifespan.type==='forever') return false;
+  if(lifespan.type==='days'){
+    const start = new Date(lifespan.startDay+'T00:00:00');
+    const now = new Date(todayKey+'T00:00:00');
+    const diffDays = Math.round((now-start)/86400000);
+    return diffDays >= lifespan.days;
+  }
+  if(lifespan.type==='until'){
+    return todayKey > lifespan.endDay;
+  }
+  if(lifespan.type==='occurrences'){
+    return (lifespan.remaining||0) <= 0;
+  }
+  return false;
+}
+function lifespanBadgeText(lifespan){
+  if(!lifespan || lifespan.type==='forever') return 'forever';
+  if(lifespan.type==='days'){
+    const start = new Date(lifespan.startDay+'T00:00:00');
+    const now = new Date(dayKey()+'T00:00:00');
+    const elapsed = Math.round((now-start)/86400000);
+    const left = Math.max(0, lifespan.days - elapsed);
+    return `${left}d left`;
+  }
+  if(lifespan.type==='until') return `until ${shortDateTag(lifespan.endDay)}`;
+  if(lifespan.type==='occurrences') return `${lifespan.remaining} left`;
+  return '';
 }
 
 function dailyBarHtml(d){
@@ -1196,8 +1370,10 @@ function dailyBarHtml(d){
 
 function renderDaily(){
   const el = document.getElementById('dailyList');
-  if(state.daily.length===0){ el.innerHTML = '<div class="empty">No daily tasks yet.</div>'; return; }
-  el.innerHTML = state.daily.map(d => {
+  const today = dayKey();
+  const visible = state.daily.filter(d => !isLifespanExpired(d.lifespan, today));
+  if(visible.length===0){ el.innerHTML = '<div class="empty">No daily tasks yet.</div>'; return; }
+  el.innerHTML = visible.map(d => {
     const color = dailyColor(d);
     const hasTarget = !!d.target;
     const complete = hasTarget ? (d.progress >= d.target) : d.done;
@@ -1208,11 +1384,13 @@ function renderDaily(){
         <span class="color-dot" style="background:${color.dark};" onclick="openColorPicker('${d.id}')" title="Tap to choose a color"></span>
         <span class="daily-text ${complete?'done':''}">${escapeHtml(d.text)}</span>
         ${timerRecordBadge('daily', d.id)}
+        <span class="lifespan-badge">${lifespanBadgeText(d.lifespan)}</span>
         ${hasTarget ? `
           <button class="daily-count-btn" onclick="adjustDaily('${d.id}',-1)">−</button>
           <span class="daily-tally ${complete?'complete':''}">${d.progress}/${d.target}</span>
           <button class="daily-count-btn" onclick="adjustDaily('${d.id}',1)">+</button>
         ` : ''}
+        <button class="edit-btn" onclick="openEditHabitModal('${d.id}')" title="Edit">✎</button>
         <button class="rm-x" onclick="deleteDaily('${d.id}')">×</button>
       </div>
       ${dailyBarHtml(d)}
@@ -1237,9 +1415,353 @@ function adjustDaily(id, delta){
   d.progress = Math.max(0, Math.min(d.target, d.progress + delta));
   save(); renderDaily();
 }
-function deleteDaily(id){
-  state.daily = state.daily.filter(d=>d.id!==id);
-  save(); renderDaily();
+let editHabitId = null;
+function openEditHabitModal(id){
+  const d = state.daily.find(d=>d.id===id);
+  if(!d) return;
+  editHabitId = id;
+  document.getElementById('confirmMessage').innerHTML = 'Edit task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editHabitName" value="${escapeHtml(d.text)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:8px;">
+    <input type="number" id="editHabitTarget" placeholder="Target (opt.)" min="1" value="${d.target||''}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:10px;">
+    <button class="modal-btn" id="editHabitSaveBtn">Save</button>
+    <button class="btn subtle small" id="editHabitCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('editHabitSaveBtn').onclick = ()=>{
+    const name = document.getElementById('editHabitName').value.trim();
+    const targetRaw = document.getElementById('editHabitTarget').value;
+    if(!name) return;
+    d.text = name;
+    const newTarget = targetRaw ? Math.max(1, parseInt(targetRaw,10)) : null;
+    if(newTarget !== d.target){ d.target = newTarget; d.progress = 0; }
+    save(); renderDaily();
+    document.getElementById('confirmOverlay').classList.remove('open');
+    editHabitId = null;
+  };
+  document.getElementById('editHabitCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+    editHabitId = null;
+  };
+}
+
+// ---------- Weekly Routine ----------
+const WEEKDAY_LABELS = ['S','M','T','W','T','F','S'];
+let weeklyDraftWeekdays = [];
+let weeklyLifespanMode = 'forever';
+let weeklyShowAll = false;
+
+function toggleNewWeeklyForm(){
+  const f = document.getElementById('newWeeklyForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')){
+    document.getElementById('weeklyNameInput').value='';
+    document.getElementById('weeklyTargetInput').value='';
+    weeklyDraftWeekdays = [];
+    setWeeklyLifespanMode('forever');
+    renderWeekdayPicker();
+  }
+}
+function renderWeekdayPicker(){
+  const el = document.getElementById('weeklyWeekdayPicker');
+  el.innerHTML = WEEKDAY_LABELS.map((label,i)=>
+    `<button type="button" class="weekday-btn ${weeklyDraftWeekdays.includes(i)?'active':''}" onclick="toggleWeeklyDraftDay(${i})">${label}</button>`
+  ).join('');
+}
+function toggleWeeklyDraftDay(i){
+  const idx = weeklyDraftWeekdays.indexOf(i);
+  if(idx>=0) weeklyDraftWeekdays.splice(idx,1); else weeklyDraftWeekdays.push(i);
+  renderWeekdayPicker();
+}
+function setWeeklyLifespanMode(mode){
+  weeklyLifespanMode = mode;
+  document.getElementById('weeklyLifeForeverBtn').classList.toggle('active', mode==='forever');
+  document.getElementById('weeklyLifeUntilBtn').classList.toggle('active', mode==='until');
+  document.getElementById('weeklyLifeOccBtn').classList.toggle('active', mode==='occurrences');
+  document.getElementById('weeklyUntilRow').style.display = mode==='until' ? 'block' : 'none';
+  document.getElementById('weeklyOccRow').style.display = mode==='occurrences' ? 'flex' : 'none';
+}
+function saveNewWeekly(){
+  const name = document.getElementById('weeklyNameInput').value.trim();
+  if(!name){ showAlertModal('Give the task a name first.'); return; }
+  if(weeklyDraftWeekdays.length===0){ showAlertModal('Pick at least one day of the week.'); return; }
+  const targetRaw = document.getElementById('weeklyTargetInput').value;
+  const target = targetRaw ? Math.max(1, parseInt(targetRaw,10)) : null;
+  let lifespan = {type:'forever'};
+  if(weeklyLifespanMode==='until'){
+    const val = document.getElementById('weeklyUntilInput').value;
+    if(!val){ showAlertModal('Pick an end date.'); return; }
+    lifespan = {type:'until', endDay: val};
+  } else if(weeklyLifespanMode==='occurrences'){
+    const n = Math.max(1, parseInt(document.getElementById('weeklyOccInput').value,10) || 8);
+    lifespan = {type:'occurrences', remaining:n, total:n};
+  }
+  state.weekly.push({
+    id: uid(), text:name, target, progress:0, done:false,
+    colorIndex: state.weekly.length % DAILY_COLOR_PALETTE.length,
+    weekdays: weeklyDraftWeekdays.slice(), lifespan
+  });
+  save(); toggleNewWeeklyForm(); renderWeekly();
+}
+function isWeeklyDueToday(w){
+  return w.weekdays.includes(new Date().getDay());
+}
+function toggleWeeklyShowAll(){
+  weeklyShowAll = !weeklyShowAll;
+  document.getElementById('weeklyShowAllBtn').classList.toggle('active', weeklyShowAll);
+  renderWeekly();
+}
+function weekdaysLabel(weekdays){
+  return weekdays.slice().sort().map(i=>WEEKDAY_LABELS[i]).join('');
+}
+function renderWeekly(){
+  const el = document.getElementById('weeklyList');
+  const today = dayKey();
+  const alive = state.weekly.filter(w => !isLifespanExpired(w.lifespan, today));
+  const visible = weeklyShowAll ? alive : alive.filter(isWeeklyDueToday);
+  if(visible.length===0){
+    el.innerHTML = `<div class="empty">${weeklyShowAll ? 'No weekly routine tasks yet.' : "Nothing due today. Tap 'Show all' to see everything."}</div>`;
+    return;
+  }
+  el.innerHTML = visible.map(w => {
+    const color = dailyColor(w);
+    const hasTarget = !!w.target;
+    const complete = hasTarget ? (w.progress >= w.target) : w.done;
+    const dueToday = isWeeklyDueToday(w);
+    return `
+    <div class="daily-item">
+      <div class="daily-item-row">
+        <button class="check-btn ${complete?'checked':''}" onclick="onWeeklyCheckboxTap('${w.id}')" ${dueToday?'':'disabled style="opacity:0.4;"'}>${complete?'✓':''}</button>
+        <span class="color-dot" style="background:${color.dark};" onclick="openColorPickerFor('weekly','${w.id}')" title="Tap to choose a color"></span>
+        <span class="daily-text ${complete?'done':''}" style="${dueToday?'':'color:var(--pencil);'}">${escapeHtml(w.text)}</span>
+        <span class="past-date-tag" style="background:var(--paper-2); color:var(--pencil); border-color:rgba(34,40,59,0.15);">${weekdaysLabel(w.weekdays)}</span>
+        <span class="lifespan-badge">${lifespanBadgeText(w.lifespan)}</span>
+        ${hasTarget && dueToday ? `
+          <button class="daily-count-btn" onclick="adjustWeekly('${w.id}',-1)">−</button>
+          <span class="daily-tally ${complete?'complete':''}">${w.progress}/${w.target}</span>
+          <button class="daily-count-btn" onclick="adjustWeekly('${w.id}',1)">+</button>
+        ` : ''}
+        <button class="edit-btn" onclick="openEditWeeklyModal('${w.id}')" title="Edit">✎</button>
+        <button class="rm-x" onclick="deleteWeekly('${w.id}')">×</button>
+      </div>
+      ${dueToday ? dailyBarHtml(w) : ''}
+    </div>
+  `;
+  }).join('');
+}
+function onWeeklyCheckboxTap(id){
+  const w = state.weekly.find(w=>w.id===id);
+  if(!w || !isWeeklyDueToday(w)) return;
+  if(w.target){ w.progress = Math.min(w.target, w.progress+1); }
+  else { w.done = !w.done; }
+  save(); renderWeekly();
+}
+function adjustWeekly(id, delta){
+  const w = state.weekly.find(w=>w.id===id);
+  if(!w || !w.target || !isWeeklyDueToday(w)) return;
+  w.progress = Math.max(0, Math.min(w.target, w.progress+delta));
+  save(); renderWeekly();
+}
+function deleteWeekly(id){
+  state.weekly = state.weekly.filter(w=>w.id!==id);
+  save(); renderWeekly();
+}
+function openEditWeeklyModal(id){
+  const w = state.weekly.find(w=>w.id===id);
+  if(!w) return;
+  weeklyDraftWeekdays = w.weekdays.slice();
+  document.getElementById('confirmMessage').innerHTML = 'Edit weekly routine task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editWeeklyName" value="${escapeHtml(w.text)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:8px;">
+    <input type="number" id="editWeeklyTarget" placeholder="Target (opt.)" min="1" value="${w.target||''}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:8px;">
+    <div class="weekday-picker" id="editWeeklyPicker" style="margin-bottom:10px;"></div>
+    <button class="modal-btn" id="editWeeklySaveBtn">Save</button>
+    <button class="btn subtle small" id="editWeeklyCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  const renderEditPicker = ()=>{
+    document.getElementById('editWeeklyPicker').innerHTML = WEEKDAY_LABELS.map((label,i)=>
+      `<button type="button" class="weekday-btn ${weeklyDraftWeekdays.includes(i)?'active':''}" onclick="toggleEditWeeklyDay(${i})">${label}</button>`
+    ).join('');
+  };
+  window.toggleEditWeeklyDay = (i)=>{
+    const idx = weeklyDraftWeekdays.indexOf(i);
+    if(idx>=0) weeklyDraftWeekdays.splice(idx,1); else weeklyDraftWeekdays.push(i);
+    renderEditPicker();
+  };
+  renderEditPicker();
+  document.getElementById('editWeeklySaveBtn').onclick = ()=>{
+    const name = document.getElementById('editWeeklyName').value.trim();
+    if(!name || weeklyDraftWeekdays.length===0) return;
+    w.text = name;
+    const targetRaw = document.getElementById('editWeeklyTarget').value;
+    const newTarget = targetRaw ? Math.max(1, parseInt(targetRaw,10)) : null;
+    if(newTarget !== w.target){ w.target = newTarget; w.progress = 0; }
+    w.weekdays = weeklyDraftWeekdays.slice();
+    save(); renderWeekly();
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+  document.getElementById('editWeeklyCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+}
+
+// Generic color picker that works for any task collection (daily/weekly), not just Habits
+function openColorPickerFor(collection, id){
+  openColorPicker(id, collection);
+}
+
+// ---------- Recurring Dates ----------
+let datedDraftDates = [];
+let datedDraftRecurrence = 'monthly';
+let datedLifespanMode = 'forever';
+let datedShowAll = false;
+
+function toggleNewDatedForm(){
+  const f = document.getElementById('newDatedForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')){
+    document.getElementById('datedNameInput').value='';
+    datedDraftDates = [];
+    setDatedRecurrence('monthly');
+    setDatedLifespanMode('forever');
+    renderDatedDraftDates();
+  }
+}
+function setDatedRecurrence(mode){
+  datedDraftRecurrence = mode;
+  document.getElementById('datedMonthlyBtn').classList.toggle('active', mode==='monthly');
+  document.getElementById('datedYearlyBtn').classList.toggle('active', mode==='yearly');
+  document.getElementById('datedMonthInput').style.display = mode==='yearly' ? 'block' : 'none';
+}
+function addDatedDateDraft(){
+  if(datedDraftDates.length >= 6){ showAlertModal('Up to 6 dates per task.'); return; }
+  const day = parseInt(document.getElementById('datedDayInput').value,10);
+  if(!day || day<1 || day>31){ showAlertModal('Enter a valid day (1-31).'); return; }
+  let month = null;
+  if(datedDraftRecurrence==='yearly'){
+    month = parseInt(document.getElementById('datedMonthInput').value,10);
+    if(!month || month<1 || month>12){ showAlertModal('Enter a valid month (1-12) for a yearly date.'); return; }
+  }
+  datedDraftDates.push({month, day});
+  document.getElementById('datedDayInput').value='';
+  document.getElementById('datedMonthInput').value='';
+  renderDatedDraftDates();
+}
+function removeDatedDraftDate(i){ datedDraftDates.splice(i,1); renderDatedDraftDates(); }
+function renderDatedDraftDates(){
+  const el = document.getElementById('datedDatesList');
+  if(datedDraftDates.length===0){ el.innerHTML = '<div class="empty">No dates added yet.</div>'; return; }
+  el.innerHTML = datedDraftDates.map((d,i)=>{
+    const label = d.month ? `${d.month}/${d.day}` : `day ${d.day}`;
+    return `<span class="dated-date-chip">${label} <button class="rm" onclick="removeDatedDraftDate(${i})">×</button></span>`;
+  }).join('');
+}
+function setDatedLifespanMode(mode){
+  datedLifespanMode = mode;
+  document.getElementById('datedLifeForeverBtn').classList.toggle('active', mode==='forever');
+  document.getElementById('datedLifeUntilBtn').classList.toggle('active', mode==='until');
+  document.getElementById('datedLifeOccBtn').classList.toggle('active', mode==='occurrences');
+  document.getElementById('datedUntilRow').style.display = mode==='until' ? 'block' : 'none';
+  document.getElementById('datedOccRow').style.display = mode==='occurrences' ? 'flex' : 'none';
+}
+function saveNewDated(){
+  const name = document.getElementById('datedNameInput').value.trim();
+  if(!name){ showAlertModal('Give the task a name first.'); return; }
+  if(datedDraftDates.length===0){ showAlertModal('Add at least one date.'); return; }
+  let lifespan = {type:'forever'};
+  if(datedLifespanMode==='until'){
+    const val = document.getElementById('datedUntilInput').value;
+    if(!val){ showAlertModal('Pick an end date.'); return; }
+    lifespan = {type:'until', endDay: val};
+  } else if(datedLifespanMode==='occurrences'){
+    const n = Math.max(1, parseInt(document.getElementById('datedOccInput').value,10) || 3);
+    lifespan = {type:'occurrences', remaining:n, total:n};
+  }
+  state.dated.push({
+    id: uid(), text:name, recurrence: datedDraftRecurrence,
+    dates: datedDraftDates.slice(), lifespan,
+    lastPromotedKey: null
+  });
+  save(); toggleNewDatedForm(); renderDated();
+}
+function toggleDatedShowAll(){
+  datedShowAll = !datedShowAll;
+  document.getElementById('datedShowAllBtn').classList.toggle('active', datedShowAll);
+  renderDated();
+}
+function datedDatesLabel(d){
+  return d.dates.map(e => d.recurrence==='monthly' ? `day ${e.day}` : `${e.month}/${e.day}`).join(', ');
+}
+function renderDated(){
+  const el = document.getElementById('datedList');
+  const today = dayKey();
+  const alive = state.dated.filter(d => !isLifespanExpired(d.lifespan, today));
+  const dueTodayFn = (d) => {
+    const now = new Date();
+    const day = now.getDate(), month = now.getMonth()+1;
+    return d.recurrence==='monthly' ? d.dates.some(e=>e.day===day) : d.dates.some(e=>e.month===month && e.day===day);
+  };
+  const visible = datedShowAll ? alive : alive.filter(dueTodayFn);
+  if(visible.length===0){
+    el.innerHTML = `<div class="empty">${datedShowAll ? 'No recurring date tasks yet.' : "Nothing due today. Tap 'Show all' to see everything."}</div>`;
+    return;
+  }
+  el.innerHTML = visible.map(d => `
+    <div class="past-item">
+      <span style="flex:1; font-size:14px; font-weight:500;">${escapeHtml(d.text)}</span>
+      <span class="past-date-tag" style="background:var(--paper-2); color:var(--pencil); border-color:rgba(34,40,59,0.15);">${d.recurrence} · ${datedDatesLabel(d)}</span>
+      <span class="lifespan-badge">${lifespanBadgeText(d.lifespan)}</span>
+      <button class="edit-btn" onclick="openEditDatedModal('${d.id}')" title="Edit">✎</button>
+      <button class="rm-x" onclick="deleteDated('${d.id}')">×</button>
+    </div>
+  `).join('');
+}
+function deleteDated(id){
+  state.dated = state.dated.filter(d=>d.id!==id);
+  save(); renderDated();
+}
+function openEditDatedModal(id){
+  const d = state.dated.find(d=>d.id===id);
+  if(!d) return;
+  document.getElementById('confirmMessage').innerHTML = 'Edit recurring date task';
+  document.getElementById('confirmButtons').innerHTML = `
+    <input type="text" id="editDatedName" value="${escapeHtml(d.text)}" style="width:100%; box-sizing:border-box; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; margin-bottom:10px;">
+    <button class="modal-btn" id="editDatedSaveBtn">Save name</button>
+    <button class="btn subtle small" id="editDatedCancelBtn" style="margin-top:8px;">Cancel</button>
+  `;
+  document.getElementById('confirmOverlay').classList.add('open');
+  document.getElementById('editDatedSaveBtn').onclick = ()=>{
+    const name = document.getElementById('editDatedName').value.trim();
+    if(!name) return;
+    d.text = name;
+    save(); renderDated();
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+  document.getElementById('editDatedCancelBtn').onclick = ()=>{
+    document.getElementById('confirmOverlay').classList.remove('open');
+  };
+}
+
+// Promotes any Recurring Dates task due today into Today Special, once per day
+// (guarded by lastPromotedKey so it doesn't spawn duplicates on repeated renders).
+function promoteDueDatedTasks(){
+  const today = dayKey();
+  const now = new Date();
+  const day = now.getDate(), month = now.getMonth()+1;
+  let changed = false;
+  state.dated.forEach(d => {
+    if(isLifespanExpired(d.lifespan, today)) return;
+    if(d.lastPromotedKey === today) return;
+    const due = d.recurrence==='monthly' ? d.dates.some(e=>e.day===day) : d.dates.some(e=>e.month===month && e.day===day);
+    if(due){
+      state.special.push({id: uid(), text: d.text, done:false, addedToday: today});
+      d.lastPromotedKey = today;
+      if(d.lifespan.type==='occurrences'){ d.lifespan.remaining = Math.max(0, d.lifespan.remaining-1); }
+      changed = true;
+    }
+  });
+  if(changed) save();
 }
 
 // ---------- Section 3: Today Special ----------
@@ -1356,6 +1878,10 @@ function requestDeletePastTask(id){
 function dayKey(d=new Date()){
   return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 }
+function weekdayOfKey(key){
+  const [y,m,d] = key.split('-').map(Number);
+  return new Date(y,m-1,d).getDay();
+}
 
 // Snapshot yesterday's state into history, then reset daily-cycle items.
 // Runs once per load/interval check — only acts when the calendar day has actually changed.
@@ -1369,9 +1895,12 @@ function checkDayRollover(){
   if(state.lastSeenDay === today) return; // same day, nothing to do
 
   const prevDay = state.lastSeenDay;
+  const prevWeekday = weekdayOfKey(prevDay);
+  const weeklyDueOnPrevDay = state.weekly.filter(w => w.weekdays.includes(prevWeekday));
 
   // Archive snapshot of the previous day. Daily tasks may be target-based (progress/target)
-  // or plain checkboxes (done) -- record completion correctly either way.
+  // or plain checkboxes (done) -- record completion correctly either way. Weekly Routine
+  // tasks only get an entry for days they were actually due on.
   state.history[prevDay] = {
     projects: state.projects.map(p => ({
       name: p.name,
@@ -1384,13 +1913,27 @@ function checkDayRollover(){
     daily: state.daily.map(d => ({
       text: d.text,
       done: d.target ? (d.progress >= d.target) : d.done
-    })),
+    })).concat(weeklyDueOnPrevDay.map(w => ({
+      text: w.text + ' (weekly)',
+      done: w.target ? (w.progress >= w.target) : w.done
+    }))),
     special: state.special.filter(s => s.addedToday === prevDay).map(s => ({ text: s.text, done: s.done }))
   };
 
   // Reset daily-cycle progress for the new day (projects & daily habits repeat each day)
   state.projects.forEach(p => p.tasks.forEach(t => { t.progress = 0; t.done = false; }));
   state.daily.forEach(d => { d.done = false; if(d.target) d.progress = 0; });
+
+  // Weekly Routine tasks only reset progress (and consume an occurrence, if that's how
+  // their lifespan is set up) on days they were actually due -- a task due Mon/Wed/Fri
+  // doesn't lose progress or count down on a Tuesday it was never active on.
+  weeklyDueOnPrevDay.forEach(w => {
+    w.done = false;
+    if(w.target) w.progress = 0;
+    if(w.lifespan && w.lifespan.type==='occurrences'){
+      w.lifespan.remaining = Math.max(0, w.lifespan.remaining - 1);
+    }
+  });
 
   // Any Today Special item from the previous day that was never completed moves into
   // Past Task instead of just disappearing. It keeps its original day so completing it
@@ -2230,9 +2773,12 @@ if(state.projects.length===0 && state.daily.length===0 && state.lastSeenDay===nu
 }
 
 checkDayRollover();
+promoteDueDatedTasks();
 renderStamp();
 renderProjects();
 renderDaily();
+renderWeekly();
+renderDated();
 renderSpecial();
 renderFutureChips();
 renderFuture();
@@ -2242,7 +2788,8 @@ loadManuscriptForToday();
 // re-check rollover periodically in case the tab stays open past midnight
 setInterval(()=>{
   checkDayRollover();
-  renderProjects(); renderDaily(); renderSpecial(); renderFuture(); renderPastTasks(); renderStamp(); loadManuscriptForToday();
+  promoteDueDatedTasks();
+  renderProjects(); renderDaily(); renderWeekly(); renderDated(); renderSpecial(); renderFuture(); renderPastTasks(); renderStamp(); loadManuscriptForToday();
 }, 5*60000);
 
 // ---------- PWA: register service worker ----------
