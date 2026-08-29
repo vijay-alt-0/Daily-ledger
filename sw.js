@@ -2,7 +2,7 @@
 // This is the exact bug that caused stale-caching problems on VideoShelf —
 // if this string doesn't change, installed users keep seeing the OLD app
 // even after you push new code.
-const CACHE_NAME = 'daily-ledger-v7';
+const CACHE_NAME = 'daily-ledger-v8';
 
 const ASSETS_TO_CACHE = [
   './',

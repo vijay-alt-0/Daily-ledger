@@ -32,7 +32,34 @@
     --amber:#D9A441;
     --amber-bg:#F6E9D0;
     --card:#FBF8F1;
+    --input-bg:#FFFFFF;
     --shadow: 0 1px 0 rgba(34,40,59,0.06);
+  }
+  body.dark{
+    --paper:#1C1B22;
+    --paper-2:#242330;
+    --ink:#EDE9E0;
+    --ink-soft:#C7C2B8;
+    --rule:#6B4A47;
+    --rule-strong:#E0847C;
+    --pencil:#8B8578;
+    --green:#7FBF9A;
+    --green-bg:#233329;
+    --amber:#E8B860;
+    --amber-bg:#3A2E1C;
+    --card:#26242E;
+    --input-bg:#2E2C38;
+    --shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  body.dark .margin-rule{ background:rgba(224,132,124,0.35); }
+  body.dark{
+    background:
+      repeating-linear-gradient(
+        to bottom,
+        transparent 0px, transparent 34px,
+        rgba(224,132,124,0.06) 34px, rgba(224,132,124,0.06) 35px
+      ),
+      var(--paper) !important;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -61,8 +88,15 @@
     position:relative;
     z-index:1;
   }
+  .top-row{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap:12px; flex-wrap:wrap-reverse;
+  }
+  .top-right-cluster{
+    display:flex; flex-direction:column; align-items:flex-end; gap:8px;
+    flex-shrink:0;
+  }
   .stamp{
-    position:absolute; top:14px; right:16px;
     text-align:right;
     font-family:'JetBrains Mono',monospace;
     font-size:10px;
@@ -72,9 +106,25 @@
     padding:5px 9px;
     background:var(--card);
     line-height:1.6;
+    white-space:nowrap;
   }
+  .top-btn-row{
+    display:flex; align-items:center; gap:8px;
+  }
+  .icon-btn{
+    width:30px; height:30px;
+    display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--rule);
+    border-radius:50%;
+    background:var(--card);
+    color:var(--rule-strong);
+    font-size:15px;
+    cursor:pointer;
+    padding:0;
+    flex-shrink:0;
+  }
+  .icon-btn:active{ transform:scale(0.92); }
   .install-btn{
-    position:absolute; top:52px; right:16px;
     display:flex; align-items:center; gap:2px;
     font-family:'JetBrains Mono',monospace;
     font-size:9px; font-weight:700;
@@ -85,12 +135,14 @@
     background:var(--amber-bg);
     cursor:pointer;
     line-height:1;
+    white-space:nowrap;
   }
   .install-btn-icon{ font-size:11px; }
   .install-btn:active{ transform:scale(0.94); }
   header.top{
-    padding-top:6px;
+    padding-top:2px;
     margin-bottom:6px;
+    min-width:0;
   }
   .kicker{
     font-family:'JetBrains Mono',monospace;
@@ -108,13 +160,13 @@
     letter-spacing:-0.01em;
   }
   .section{
-    margin-top:34px;
+    margin-top:44px;
   }
   .section-head{
     display:flex;
     align-items:baseline;
     gap:10px;
-    margin-bottom:12px;
+    margin-bottom:14px;
   }
   .section-num{
     font-family:'JetBrains Mono',monospace;
@@ -134,13 +186,13 @@
     letter-spacing:.04em;
   }
   .subsection{
-    margin-top:22px;
-    padding-top:18px;
+    margin-top:32px;
+    padding-top:24px;
     border-top:1px dashed rgba(34,40,59,0.14);
   }
-  .subsection:first-of-type{ margin-top:8px; }
+  .subsection:first-of-type{ margin-top:14px; }
   .subsection-head{
-    display:flex; align-items:center; gap:8px; margin-bottom:6px;
+    display:flex; align-items:center; gap:8px; margin-bottom:8px;
   }
   .subsection-title{
     font-family:'JetBrains Mono',monospace;
@@ -150,7 +202,8 @@
   .section-sub{
     font-size:12.5px;
     color:var(--pencil);
-    margin:-6px 0 14px 0;
+    margin:2px 0 16px 0;
+    line-height:1.5;
   }
 
   .card{
@@ -158,8 +211,8 @@
     border:1px solid rgba(34,40,59,0.10);
     border-radius:8px;
     box-shadow:var(--shadow);
-    padding:14px 14px;
-    margin-bottom:12px;
+    padding:18px 16px;
+    margin-bottom:14px;
   }
 
   /* Section 1: projects */
@@ -184,7 +237,7 @@
     display:flex;
     align-items:center;
     gap:10px;
-    padding:9px 4px;
+    padding:13px 4px;
     border-top:1px dashed rgba(34,40,59,0.12);
   }
   .task-row:first-of-type{border-top:none;}
@@ -242,17 +295,19 @@
     gap:8px;
     margin-top:10px;
   }
-  input[type=text], input[type=number]{
+  input[type=text], input[type=number], input[type=date]{
     font-family:'Inter',sans-serif;
     font-size:13.5px;
     padding:8px 10px;
     border:1px solid rgba(34,40,59,0.18);
     border-radius:6px;
-    background:#fff;
+    background:var(--input-bg);
     color:var(--ink);
     flex:1;
     min-width:0;
   }
+  input[type=date]{ color-scheme: light; }
+  body.dark input[type=date]{ color-scheme: dark; }
   input::placeholder{color:#B3AB9C;}
   .btn{
     font-family:'JetBrains Mono',monospace;
@@ -338,13 +393,21 @@
 
   /* Section 2: daily tasks */
   .daily-item{
-    display:flex; flex-direction:column; gap:8px;
-    padding:10px 4px;
+    display:flex; flex-direction:column; gap:10px;
+    padding:16px 4px;
     border-top:1px dashed rgba(34,40,59,0.12);
   }
   .daily-item:first-of-type{border-top:none;}
-  .daily-item-row{ display:flex; align-items:center; gap:8px; }
-  .daily-text{flex:1; font-size:14px; font-weight:500;}
+  .daily-item-identity{
+    display:flex; align-items:center; gap:10px;
+  }
+  .daily-item-actions{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+    padding-left:31px; /* aligns under the task name, past the checkbox+dot column */
+  }
+  .counter-group{ display:flex; align-items:center; gap:8px; }
+  .row-actions-spacer{ flex:1; min-width:6px; }
+  .daily-text{flex:1; font-size:14px; font-weight:500; min-width:0;}
   .daily-text.done{color:var(--green); text-decoration:line-through; text-decoration-color:rgba(76,122,94,0.5);}
   .color-dot{
     width:9px; height:9px; border-radius:50%; flex-shrink:0; cursor:pointer;
@@ -385,7 +448,7 @@
   /* Section: past task */
   .past-item{
     display:flex; align-items:center; gap:10px;
-    padding:9px 4px;
+    padding:13px 4px;
     border-top:1px dashed rgba(34,40,59,0.12);
   }
   .past-item:first-of-type{border-top:none;}
@@ -636,14 +699,23 @@
 <body>
 <div class="margin-rule"></div>
 <div class="wrap">
-  <div class="stamp" id="stamp">PAGE 01<br>DATE: --</div>
-  <button id="installBtn" class="install-btn" onclick="triggerInstall()" title="Install app" style="display:none;">
-    <span class="install-btn-icon">⬇</span><span class="install-btn-txt">IN</span>
-  </button>
-  <header class="top">
-    <div class="kicker">Core</div>
-    <h1>Daily Ledger</h1>
-  </header>
+  <div class="top-row">
+    <header class="top">
+      <div class="kicker">Core</div>
+      <h1>Daily Ledger</h1>
+    </header>
+    <div class="top-right-cluster">
+      <div class="stamp" id="stamp">PAGE 01<br>DATE: --</div>
+      <div class="top-btn-row">
+        <button id="darkModeBtn" class="icon-btn" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <span id="darkModeIcon">☾</span>
+        </button>
+        <button id="installBtn" class="install-btn" onclick="triggerInstall()" title="Install app" style="display:none;">
+          <span class="install-btn-icon">⬇</span><span class="install-btn-txt">IN</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <div class="page-tabs">
     <button class="page-tab active" data-page="today" onclick="switchPage('today')">Today</button>
@@ -695,7 +767,7 @@
         <div id="dailyList"></div>
         <div class="add-row">
           <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
-          <input type="number" id="dailyTargetInput" placeholder="Target (opt.)" min="1" style="max-width:100px;">
+          <input type="number" id="dailyTargetInput" placeholder="Target" min="1" style="max-width:100px;">
         </div>
         <div style="display:flex; gap:8px; margin:8px 0;">
           <button class="chip active" id="habitLifeForeverBtn" onclick="setHabitLifespanMode('forever')">Forever</button>
@@ -852,7 +924,7 @@
     <div class="card">
       <textarea id="manuscriptInput" placeholder="Nothing written yet — totally optional." rows="4"
         style="width:100%; font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.5; padding:10px 12px;
-        border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff; color:var(--ink);
+        border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:var(--input-bg); color:var(--ink);
         resize:vertical; box-sizing:border-box;" oninput="onManuscriptInput()"></textarea>
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
         <span id="manuscriptStatus" style="font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--pencil);"></span>
@@ -881,7 +953,7 @@
       </div>
       <div style="margin-bottom:10px;">
         <label style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--pencil); display:block; margin-bottom:6px;">Link to a task (optional)</label>
-        <select id="timerLinkSelect" style="width:100%; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff; color:var(--ink);">
+        <select id="timerLinkSelect" style="width:100%; font-family:'Inter',sans-serif; font-size:13.5px; padding:8px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:var(--input-bg); color:var(--ink);">
           <option value="">No linked task</option>
         </select>
       </div>
@@ -1425,17 +1497,22 @@ function renderDaily(){
     const complete = hasTarget ? (d.progress >= d.target) : d.done;
     return `
     <div class="daily-item">
-      <div class="daily-item-row">
+      <div class="daily-item-identity">
         <button class="check-btn ${complete?'checked':''}" onclick="onDailyCheckboxTap('${d.id}')">${complete?'✓':''}</button>
         <span class="color-dot" style="background:${color.dark};" onclick="openColorPicker('${d.id}')" title="Tap to choose a color"></span>
         <span class="daily-text ${complete?'done':''}">${escapeHtml(d.text)}</span>
         ${timerRecordBadge('daily', d.id)}
+      </div>
+      <div class="daily-item-actions">
         <span class="lifespan-badge">${lifespanBadgeText(d.lifespan)}</span>
         ${hasTarget ? `
-          <button class="daily-count-btn" onclick="adjustDaily('${d.id}',-1)">−</button>
-          <span class="daily-tally ${complete?'complete':''}">${d.progress}/${d.target}</span>
-          <button class="daily-count-btn" onclick="adjustDaily('${d.id}',1)">+</button>
+          <span class="counter-group">
+            <button class="daily-count-btn" onclick="adjustDaily('${d.id}',-1)">−</button>
+            <span class="daily-tally ${complete?'complete':''}">${d.progress}/${d.target}</span>
+            <button class="daily-count-btn" onclick="adjustDaily('${d.id}',1)">+</button>
+          </span>
         ` : ''}
+        <span class="row-actions-spacer"></span>
         <button class="edit-btn" onclick="openEditHabitModal('${d.id}')" title="Edit">✎</button>
         <button class="rm-x" onclick="deleteDaily('${d.id}')">×</button>
       </div>
@@ -1460,6 +1537,13 @@ function adjustDaily(id, delta){
   if(!d || !d.target) return;
   d.progress = Math.max(0, Math.min(d.target, d.progress + delta));
   save(); renderDaily();
+}
+function deleteDaily(id){
+  const d = state.daily.find(d=>d.id===id);
+  showConfirmModal(`Remove "${d?d.text:'this task'}"? This can't be undone.`, ()=>{
+    state.daily = state.daily.filter(d=>d.id!==id);
+    save(); renderDaily();
+  });
 }
 let editHabitId = null;
 function openEditHabitModal(id){
@@ -1576,17 +1660,22 @@ function renderWeekly(){
     const dueToday = isWeeklyDueToday(w);
     return `
     <div class="daily-item">
-      <div class="daily-item-row">
+      <div class="daily-item-identity">
         <button class="check-btn ${complete?'checked':''}" onclick="onWeeklyCheckboxTap('${w.id}')" ${dueToday?'':'disabled style="opacity:0.4;"'}>${complete?'✓':''}</button>
         <span class="color-dot" style="background:${color.dark};" onclick="openColorPickerFor('weekly','${w.id}')" title="Tap to choose a color"></span>
         <span class="daily-text ${complete?'done':''}" style="${dueToday?'':'color:var(--pencil);'}">${escapeHtml(w.text)}</span>
+      </div>
+      <div class="daily-item-actions">
         <span class="past-date-tag" style="background:var(--paper-2); color:var(--pencil); border-color:rgba(34,40,59,0.15);">${weekdaysLabel(w.weekdays)}</span>
         <span class="lifespan-badge">${lifespanBadgeText(w.lifespan)}</span>
         ${hasTarget && dueToday ? `
-          <button class="daily-count-btn" onclick="adjustWeekly('${w.id}',-1)">−</button>
-          <span class="daily-tally ${complete?'complete':''}">${w.progress}/${w.target}</span>
-          <button class="daily-count-btn" onclick="adjustWeekly('${w.id}',1)">+</button>
+          <span class="counter-group">
+            <button class="daily-count-btn" onclick="adjustWeekly('${w.id}',-1)">−</button>
+            <span class="daily-tally ${complete?'complete':''}">${w.progress}/${w.target}</span>
+            <button class="daily-count-btn" onclick="adjustWeekly('${w.id}',1)">+</button>
+          </span>
         ` : ''}
+        <span class="row-actions-spacer"></span>
         <button class="edit-btn" onclick="openEditWeeklyModal('${w.id}')" title="Edit">✎</button>
         <button class="rm-x" onclick="deleteWeekly('${w.id}')">×</button>
       </div>
@@ -1609,8 +1698,11 @@ function adjustWeekly(id, delta){
   save(); renderWeekly();
 }
 function deleteWeekly(id){
-  state.weekly = state.weekly.filter(w=>w.id!==id);
-  save(); renderWeekly();
+  const w = state.weekly.find(w=>w.id===id);
+  showConfirmModal(`Remove "${w?w.text:'this task'}"? This can't be undone.`, ()=>{
+    state.weekly = state.weekly.filter(w=>w.id!==id);
+    save(); renderWeekly();
+  });
 }
 function openEditWeeklyModal(id){
   const w = state.weekly.find(w=>w.id===id);
@@ -1764,8 +1856,11 @@ function renderDated(){
   `).join('');
 }
 function deleteDated(id){
-  state.dated = state.dated.filter(d=>d.id!==id);
-  save(); renderDated();
+  const d = state.dated.find(d=>d.id===id);
+  showConfirmModal(`Remove "${d?d.text:'this task'}"? This can't be undone.`, ()=>{
+    state.dated = state.dated.filter(d=>d.id!==id);
+    save(); renderDated();
+  });
 }
 function openEditDatedModal(id){
   const d = state.dated.find(d=>d.id===id);
@@ -1839,8 +1934,11 @@ function toggleSpecial(id){
   save(); renderSpecial();
 }
 function deleteSpecial(id){
-  state.special = state.special.filter(s=>s.id!==id);
-  save(); renderSpecial();
+  const s = state.special.find(s=>s.id===id);
+  showConfirmModal(`Remove "${s?s.text:'this task'}"? This can't be undone.`, ()=>{
+    state.special = state.special.filter(s=>s.id!==id);
+    save(); renderSpecial();
+  });
 }
 function openEditSpecialModal(id){
   const s = state.special.find(s=>s.id===id);
@@ -1922,7 +2020,7 @@ function openRescheduleModal(id){
   document.getElementById('confirmMessage').innerHTML = `Reschedule "${escapeHtml(p.text)}" to:`;
   document.getElementById('confirmButtons').innerHTML = `
     <input type="date" id="rescheduleDateInput" style="width:100%; font-family:'Inter',sans-serif; font-size:14px;
-      padding:9px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff;
+      padding:9px 10px; border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:var(--input-bg);
       color:var(--ink); box-sizing:border-box; margin-bottom:10px;">
     <button class="modal-btn" id="rescheduleConfirmBtn">Reschedule</button>
     <button class="btn subtle small" id="rescheduleCancelBtn" style="margin-top:8px;">Cancel</button>
@@ -2113,8 +2211,11 @@ function renderFuture(){
   `).join('');
 }
 function deleteFuture(id){
-  state.future = state.future.filter(f=>f.id!==id);
-  save(); renderFuture();
+  const f = state.future.find(f=>f.id===id);
+  showConfirmModal(`Remove "${f?f.text:'this task'}"? This can't be undone.`, ()=>{
+    state.future = state.future.filter(f=>f.id!==id);
+    save(); renderFuture();
+  });
 }
 function openEditFutureModal(id){
   const f = state.future.find(f=>f.id===id);
@@ -2780,7 +2881,7 @@ function renderCalDayDetail(key){
       <textarea id="calNoteInput" data-day-key="${key}" placeholder="No note for this day — optional."
         oninput="onCalNoteInput('${key}')"
         style="width:100%; font-family:'Inter',sans-serif; font-size:13px; line-height:1.5; padding:8px 10px;
-        border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:#fff; color:var(--ink);
+        border:1px solid rgba(34,40,59,0.18); border-radius:6px; background:var(--input-bg); color:var(--ink);
         resize:vertical; box-sizing:border-box;" rows="3">${escapeHtml(act.note||'')}</textarea>
       <span id="calNoteStatus" style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--pencil);"></span>
     </div>
@@ -2919,6 +3020,25 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.warn('Service worker registration failed:', err));
   });
 }
+
+// ---------- Dark mode ----------
+// Stored under its own key rather than inside ledger_state_v1 -- it's a display
+// preference, not task data, so it shouldn't get mixed into that blob or ever
+// show up in exports/history.
+function applyDarkModePreference(){
+  let dark = false;
+  try{ dark = localStorage.getItem('ledger_dark_mode') === '1'; }catch(e){}
+  document.body.classList.toggle('dark', dark);
+  const icon = document.getElementById('darkModeIcon');
+  if(icon) icon.textContent = dark ? '☀' : '☾';
+}
+function toggleDarkMode(){
+  const isDark = document.body.classList.toggle('dark');
+  try{ localStorage.setItem('ledger_dark_mode', isDark ? '1' : '0'); }catch(e){}
+  const icon = document.getElementById('darkModeIcon');
+  if(icon) icon.textContent = isDark ? '☀' : '☾';
+}
+applyDarkModePreference();
 
 // ---------- PWA: install button ----------
 // The button stays hidden unless the browser actually offers an install prompt
