@@ -156,8 +156,12 @@
     font-family:'JetBrains Mono',monospace;
     font-size:28px;
     font-weight:800;
-    margin:2px 0 18px;
+    margin:0;
     letter-spacing:-0.01em;
+  }
+  .brand-row{
+    display:flex; align-items:center; gap:10px;
+    margin:2px 0 18px;
   }
   .section{
     margin-top:44px;
@@ -204,6 +208,12 @@
     color:var(--pencil);
     margin:2px 0 16px 0;
     line-height:1.5;
+  }
+  .info-icon{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:17px; height:17px; border-radius:50%; border:1px solid var(--rule);
+    color:var(--rule-strong); font-size:10px; font-weight:700; cursor:pointer;
+    background:transparent; flex-shrink:0; margin-left:auto; align-self:center;
   }
 
   .card{
@@ -812,14 +822,16 @@
   <div class="top-row">
     <header class="top">
       <div class="kicker">Core</div>
-      <h1>Daily Ledger</h1>
+      <div class="brand-row">
+        <button id="darkModeBtn" class="logo-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
+          <span id="darkModeIcon">✓</span>
+        </button>
+        <h1>Daily Ledger</h1>
+      </div>
     </header>
     <div class="top-right-cluster">
       <div class="stamp" id="stamp" onclick="switchPage('progress')" title="Tap to view Progress Tracker" style="cursor:pointer;">PAGE 01<br>DATE: --</div>
       <div class="top-btn-row">
-        <button id="darkModeBtn" class="logo-toggle" onclick="toggleDarkMode()" title="Toggle dark mode" aria-label="Toggle dark mode">
-          <span id="darkModeIcon">✓</span>
-        </button>
         <button id="installBtn" class="install-btn" onclick="triggerInstall()" title="Install app" style="display:none;">
           <span class="install-btn-icon">⬇</span><span class="install-btn-txt">IN</span>
         </button>
@@ -839,9 +851,10 @@
   <div class="section">
     <div class="section-head">
       <span class="section-num">01</span>
-      <span class="section-title">Progress Tracking</span>
+      <span class="section-title">Projects</span>
+      <span class="info-icon" data-info="Set a project, add tasks with a rep count (or none for a plain check-off)." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">Set a project, add tasks with a rep count (or none for a plain check-off).</div>
+    
 
     <div id="projects"></div>
 
@@ -866,8 +879,9 @@
     <div class="section-head">
       <span class="section-num">02</span>
       <span class="section-title">Recurring Tasks</span>
+      <span class="info-icon" data-info="Anything that repeats, grouped by how often — every day, on chosen weekdays, or on a specific date." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">Anything that repeats, grouped by how often — every day, on chosen weekdays, or on a specific date.</div>
+    
 
     <div class="subsection">
       <div class="subsection-head">
@@ -875,20 +889,24 @@
       </div>
       <div class="card">
         <div id="dailyList"></div>
-        <div class="add-row">
+        <button class="new-project-toggle" onclick="toggleNewDailyForm()">+ New daily habit</button>
+        <div class="new-project-form" id="newDailyForm">
           <input type="text" id="dailyInput" placeholder="e.g. Drink water" onkeydown="if(event.key==='Enter')addDaily()">
-          <input type="number" id="dailyTargetInput" placeholder="Target" min="1" style="max-width:100px;">
+          <input type="number" id="dailyTargetInput" placeholder="Target (opt.)" min="1">
+          <div style="display:flex; gap:8px;">
+            <button class="chip active" id="habitLifeForeverBtn" onclick="setHabitLifespanMode('forever')">Forever</button>
+            <button class="chip" id="habitLifeCustomBtn" onclick="setHabitLifespanMode('custom')">Custom days</button>
+          </div>
+          <div id="habitCustomDaysRow" style="display:none; align-items:center; gap:8px;">
+            <span style="font-size:11.5px; color:var(--pencil);">runs for</span>
+            <input type="number" id="habitCustomDaysInput" min="1" value="21" style="max-width:70px;">
+            <span style="font-size:11.5px; color:var(--pencil);">days, then stops</span>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn" onclick="addDaily()">Add</button>
+            <button class="btn subtle" onclick="toggleNewDailyForm()">Cancel</button>
+          </div>
         </div>
-        <div style="display:flex; gap:8px; margin:8px 0;">
-          <button class="chip active" id="habitLifeForeverBtn" onclick="setHabitLifespanMode('forever')">Forever</button>
-          <button class="chip" id="habitLifeCustomBtn" onclick="setHabitLifespanMode('custom')">Custom days</button>
-        </div>
-        <div id="habitCustomDaysRow" style="display:none; align-items:center; gap:8px; margin-bottom:8px;">
-          <span style="font-size:11.5px; color:var(--pencil);">runs for</span>
-          <input type="number" id="habitCustomDaysInput" min="1" value="21" style="max-width:70px;">
-          <span style="font-size:11.5px; color:var(--pencil);">days, then stops</span>
-        </div>
-        <button class="btn" onclick="addDaily()">Add</button>
       </div>
     </div>
 
@@ -897,9 +915,10 @@
     <div class="subsection">
       <div class="subsection-head">
         <span class="subsection-title">Weekly Routine</span>
+      <span class="info-icon" data-info="Repeats on chosen days of the week. Only shows here on a day it's actually due." onclick="showInfo(this.dataset.info)">i</span>
         <button class="show-all-toggle" id="weeklyShowAllBtn" onclick="toggleWeeklyShowAll()">Show all</button>
       </div>
-      <div class="section-sub" style="margin-top:-4px;">Repeats on chosen days of the week. Only shows here on a day it's actually due.</div>
+      
       <div class="card">
         <div id="weeklyList"></div>
         <button class="new-project-toggle" onclick="toggleNewWeeklyForm()">+ New weekly routine task</button>
@@ -933,9 +952,10 @@
     <div class="subsection">
       <div class="subsection-head">
         <span class="subsection-title">Recurring Dates</span>
+      <span class="info-icon" data-info="A specific date each month or year — e.g. the 1st, or March 3rd. Appears in Today Special when its day comes." onclick="showInfo(this.dataset.info)">i</span>
         <button class="show-all-toggle" id="datedShowAllBtn" onclick="toggleDatedShowAll()">Show all</button>
       </div>
-      <div class="section-sub" style="margin-top:-4px;">A specific date each month or year — e.g. the 1st, or March 3rd. Appears in Today Special when its day comes.</div>
+      
       <div class="card">
         <div id="datedList"></div>
         <button class="new-project-toggle" onclick="toggleNewDatedForm()">+ New recurring date task</button>
@@ -978,8 +998,9 @@
     <div class="section-head">
       <span class="section-num">03</span>
       <span class="section-title">Today Special</span>
+      <span class="info-icon" data-info="One-off tasks that only matter today." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">One-off tasks that only matter today.</div>
+    
     <div class="card">
       <div id="specialList"></div>
       <div class="add-row">
@@ -994,8 +1015,9 @@
     <div class="section-head">
       <span class="section-num">—</span>
       <span class="section-title">Past Task</span>
+      <span class="info-icon" data-info="Left over from a previous day. Stays here until checked off or removed." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">Left over from a previous day. Stays here until checked off or removed.</div>
+    
     <div class="card">
       <div id="pastTaskList"></div>
     </div>
@@ -1007,8 +1029,9 @@
     <div class="section-head">
       <span class="section-num">—</span>
       <span class="section-title">Waiting List</span>
+      <span class="info-icon" data-info="Not scheduled yet. Capture it here, decide later — open it to move it to Today, Future, or Past." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">Not scheduled yet. Capture it here, decide later — open it to move it to Today, Future, or Past.</div>
+    
     <div class="card">
       <div id="waitingList"></div>
       <div class="add-row">
@@ -1023,20 +1046,23 @@
     <div class="section-head">
       <span class="section-num">04</span>
       <span class="section-title">Future Task</span>
+      <span class="info-icon" data-info="Schedule something for a later day. It'll surface into Today Special when its day comes." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">Schedule something for a later day. It'll surface into Today Special when its day comes.</div>
+    
     <div class="card">
       <div id="futureList"></div>
-      <div class="add-row">
+      <button class="new-project-toggle" onclick="toggleNewFutureForm()">+ New future task</button>
+      <div class="new-project-form" id="newFutureForm">
         <input type="text" id="futureInput" placeholder="e.g. Book venue call">
-      </div>
-      <div class="future-offset-row" id="futureChips"></div>
-      <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
-        <label style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--pencil);">or pick a date:</label>
-        <input type="date" id="futureDateInput" onchange="onFutureDatePicked()">
-      </div>
-      <div style="margin-top:10px;">
-        <button class="btn" onclick="addFuture()">Schedule task</button>
+        <div class="future-offset-row" id="futureChips"></div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--pencil);">or pick a date:</label>
+          <input type="date" id="futureDateInput" onchange="onFutureDatePicked()">
+        </div>
+        <div style="display:flex; gap:8px; margin-top:4px;">
+          <button class="btn" onclick="addFuture()">Schedule task</button>
+          <button class="btn subtle" onclick="toggleNewFutureForm()">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1046,8 +1072,9 @@
     <div class="section-head">
       <span class="section-num">05</span>
       <span class="section-title">Manuscript</span>
+      <span class="info-icon" data-info="Optional. A free note for today — how it went, what happened, anything on your mind." onclick="showInfo(this.dataset.info)">i</span>
     </div>
-    <div class="section-sub">Optional. A free note for today — how it went, what happened, anything on your mind.</div>
+    
     <div class="card">
       <textarea id="manuscriptInput" placeholder="Nothing written yet — totally optional." rows="4"
         style="width:100%; font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.5; padding:10px 12px;
@@ -1061,7 +1088,9 @@
   </div><!-- /page-today -->
 
   <div class="page" id="page-timer">
-    <div class="section-sub" style="margin-bottom:16px;">Set a countdown or stopwatch, optionally linked to a task from Today or Future Tasks. When it ends, you'll be asked what to do with the linked task.</div>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:2px;">
+      <span class="info-icon" data-info="Set a countdown or stopwatch, optionally linked to a task from Today or Future Tasks. When it ends, you'll be asked what to do with the linked task." onclick="showInfo(this.dataset.info)">i</span>
+    </div>
 
     <div class="card">
       <div class="section-title" style="font-size:13px; margin-bottom:10px;">New Timer</div>
@@ -1103,7 +1132,9 @@
   </div><!-- /page-timer -->
 
   <div class="page" id="page-calendar">
-    <div class="section-sub" style="margin-bottom:14px;">Every section's activity in one place. Tap a day to see details and export it to your phone's calendar.</div>
+    <div style="display:flex; justify-content:flex-end; margin-bottom:2px;">
+      <span class="info-icon" data-info="Every section's activity in one place. Tap a day to see details and export it to your phone's calendar." onclick="showInfo(this.dataset.info)">i</span>
+    </div>
 
     <div class="card">
       <div class="cal-nav">
@@ -1314,6 +1345,9 @@ function showAlertModal(message){
     document.getElementById('confirmOverlay').classList.remove('open');
   };
 }
+// Section descriptions moved off the main screen into a tap-to-reveal (i) icon,
+// rather than sitting as permanent gray text taking up space on every visit.
+function showInfo(text){ showAlertModal(text); }
 
 // ---------- Stamp ----------
 function renderStamp(){
@@ -1566,6 +1600,15 @@ function pickDailyColor(paletteIndex){
 }
 
 let habitLifespanMode = 'forever';
+function toggleNewDailyForm(){
+  const f = document.getElementById('newDailyForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')){
+    document.getElementById('dailyInput').value='';
+    document.getElementById('dailyTargetInput').value='';
+    setHabitLifespanMode('forever');
+  }
+}
 function setHabitLifespanMode(mode){
   habitLifespanMode = mode;
   document.getElementById('habitLifeForeverBtn').classList.toggle('active', mode==='forever');
@@ -1592,6 +1635,7 @@ function addDaily(){
   input.value='';
   document.getElementById('dailyTargetInput').value='';
   setHabitLifespanMode('forever');
+  document.getElementById('newDailyForm').classList.remove('open');
   save(); renderDaily();
 }
 
@@ -1988,7 +2032,22 @@ function saveNewDated(){
     dates: datedDraftDates.slice(), lifespan,
     lastPromotedKey: null
   });
-  save(); toggleNewDatedForm(); renderDated();
+  save(); toggleNewDatedForm();
+  promoteDueDatedTasks(); // in case the new task's date is today -- don't wait for the next periodic tick
+  renderDated(); renderSpecial();
+}
+function isDatedDueToday(d){
+  const now = new Date();
+  const day = now.getDate(), month = now.getMonth()+1;
+  return d.recurrence==='monthly' ? d.dates.some(e=>e.day===day) : d.dates.some(e=>e.month===month && e.day===day);
+}
+// A task that was JUST used today (its last occurrence got consumed) must still show
+// today -- it only actually disappears starting tomorrow. Without this, a task with
+// 1 occurrence left would vanish the instant it's promoted, same day, which read as
+// "deleted within 24 hours" even though nothing was actually deleted.
+function isDatedExpiredForView(d, today){
+  if(d.lastPromotedKey === today) return false;
+  return isLifespanExpired(d.lifespan, today);
 }
 function toggleDatedShowAll(){
   datedShowAll = !datedShowAll;
@@ -2001,26 +2060,37 @@ function datedDatesLabel(d){
 function renderDated(){
   const el = document.getElementById('datedList');
   const today = dayKey();
-  const alive = state.dated.filter(d => !isLifespanExpired(d.lifespan, today));
-  const dueTodayFn = (d) => {
-    const now = new Date();
-    const day = now.getDate(), month = now.getMonth()+1;
-    return d.recurrence==='monthly' ? d.dates.some(e=>e.day===day) : d.dates.some(e=>e.month===month && e.day===day);
-  };
-  const visible = datedShowAll ? alive : alive.filter(dueTodayFn);
+  const alive = state.dated.filter(d => !isDatedExpiredForView(d, today));
+  const visible = datedShowAll ? alive : alive.filter(isDatedDueToday);
   if(visible.length===0){
     el.innerHTML = `<div class="empty">${datedShowAll ? 'No recurring date tasks yet.' : "Nothing due today. Tap 'Show all' to see everything."}</div>`;
     return;
   }
-  el.innerHTML = visible.map(d => `
+  el.innerHTML = visible.map(d => {
+    const dueToday = isDatedDueToday(d);
+    const promoted = (dueToday && d.currentPromotedSpecialId) ? state.special.find(s=>s.id===d.currentPromotedSpecialId) : null;
+    const checkboxHtml = promoted
+      ? `<button class="check-btn ${promoted.done?'checked':''}" onclick="toggleDatedPromotedDone('${d.id}')">${promoted.done?'✓':''}</button>`
+      : (dueToday ? `<button class="check-btn" disabled title="Syncing…"></button>` : '');
+    return `
     <div class="past-item">
+      ${checkboxHtml}
       <span style="flex:1; font-size:14px; font-weight:500;">${escapeHtml(d.text)}</span>
       <span class="past-date-tag" style="background:var(--paper-2); color:var(--pencil); border-color:rgba(34,40,59,0.15);">${d.recurrence} · ${datedDatesLabel(d)}</span>
       <span class="lifespan-badge">${lifespanBadgeText(d.lifespan)}</span>
       <button class="edit-btn" onclick="openEditDatedModal('${d.id}')" title="Edit">✎</button>
       <button class="rm-x" onclick="deleteDated('${d.id}')">×</button>
     </div>
-  `).join('');
+  `;
+  }).join('');
+}
+function toggleDatedPromotedDone(datedId){
+  const d = state.dated.find(d=>d.id===datedId);
+  if(!d || !d.currentPromotedSpecialId) return;
+  const s = state.special.find(s=>s.id===d.currentPromotedSpecialId);
+  if(!s) return;
+  s.done = !s.done;
+  save(); renderDated(); renderSpecial();
 }
 function deleteDated(id){
   const d = state.dated.find(d=>d.id===id);
@@ -2055,16 +2125,15 @@ function openEditDatedModal(id){
 // (guarded by lastPromotedKey so it doesn't spawn duplicates on repeated renders).
 function promoteDueDatedTasks(){
   const today = dayKey();
-  const now = new Date();
-  const day = now.getDate(), month = now.getMonth()+1;
   let changed = false;
   state.dated.forEach(d => {
-    if(isLifespanExpired(d.lifespan, today)) return;
+    if(isDatedExpiredForView(d, today)) return;
     if(d.lastPromotedKey === today) return;
-    const due = d.recurrence==='monthly' ? d.dates.some(e=>e.day===day) : d.dates.some(e=>e.month===month && e.day===day);
-    if(due){
-      state.special.push({id: uid(), text: d.text, done:false, addedToday: today, note:'', subtasks:[]});
+    if(isDatedDueToday(d)){
+      const newItem = {id: uid(), text: d.text, done:false, addedToday: today, note:'', subtasks:[]};
+      state.special.push(newItem);
       d.lastPromotedKey = today;
+      d.currentPromotedSpecialId = newItem.id;
       if(d.lifespan.type==='occurrences'){ d.lifespan.remaining = Math.max(0, d.lifespan.remaining-1); }
       changed = true;
     }
@@ -2600,6 +2669,17 @@ function onFutureDatePicked(){
   pickedDate = val || null;
   renderFutureChips();
 }
+function toggleNewFutureForm(){
+  const f = document.getElementById('newFutureForm');
+  f.classList.toggle('open');
+  if(f.classList.contains('open')){
+    document.getElementById('futureInput').value='';
+    document.getElementById('futureDateInput').value='';
+    pickedDate = null;
+    selectedOffset = 1;
+    renderFutureChips();
+  }
+}
 function addFuture(){
   const input = document.getElementById('futureInput');
   const text = input.value.trim();
@@ -2616,6 +2696,7 @@ function addFuture(){
   input.value='';
   document.getElementById('futureDateInput').value='';
   pickedDate = null;
+  document.getElementById('newFutureForm').classList.remove('open');
   save(); renderFuture(); renderFutureChips();
 }
 function renderFuture(){
@@ -2791,9 +2872,23 @@ function renderDailyHistory(){
   const today = dayKey();
   let html = '';
   html += `<div class="card"><div class="day-label">${prettyDate(today)} <span class="today-badge">TODAY</span></div>`;
-  if(state.daily.length===0){ html += '<div class="empty">No daily tasks set up.</div>'; }
-  else state.daily.forEach(d=>{
-    html += `<div class="task-line"><span class="check-icon ${d.done?'':'no'}">${d.done?'✓':'○'}</span><span class="tname ${d.done?'done':''}">${escapeHtml(d.text)}</span>${d.remind?'<span class="tnum">reminders on</span>':''}</div>`;
+  const liveEntries = [];
+  state.daily.forEach(d=>{
+    if(isLifespanExpired(d.lifespan, today)) return;
+    liveEntries.push({ text:d.text, done: d.target ? (d.progress>=d.target) : d.done });
+  });
+  state.weekly.forEach(w=>{
+    if(isLifespanExpired(w.lifespan, today) || !isWeeklyDueToday(w)) return;
+    liveEntries.push({ text:w.text+' (weekly)', done: w.target ? (w.progress>=w.target) : w.done });
+  });
+  state.dated.forEach(d=>{
+    if(!isDatedDueToday(d)) return;
+    const promoted = d.currentPromotedSpecialId ? state.special.find(s=>s.id===d.currentPromotedSpecialId) : null;
+    liveEntries.push({ text:d.text+' (recurring)', done: promoted ? !!promoted.done : false });
+  });
+  if(liveEntries.length===0){ html += '<div class="empty">No daily tasks set up.</div>'; }
+  else liveEntries.forEach(d=>{
+    html += `<div class="task-line"><span class="check-icon ${d.done?'':'no'}">${d.done?'✓':'○'}</span><span class="tname ${d.done?'done':''}">${escapeHtml(d.text)}</span></div>`;
   });
   html += `</div>`;
   allDayKeysSorted().forEach(k=>{
@@ -3194,7 +3289,20 @@ function activityForDay(key){
         result.projects.push({ label, done, detail: t.limit ? `${t.progress}/${t.limit}` : (done?'done':'not done') });
       });
     });
-    state.daily.forEach(d => result.daily.push({ label:d.text, done:d.done }));
+    state.daily.forEach(d => {
+      if(isLifespanExpired(d.lifespan, today)) return;
+      result.daily.push({ label:d.text, done: d.target ? (d.progress>=d.target) : d.done });
+    });
+    state.weekly.forEach(w => {
+      if(isLifespanExpired(w.lifespan, today)) return;
+      if(!isWeeklyDueToday(w)) return;
+      result.daily.push({ label:w.text+' (weekly)', done: w.target ? (w.progress>=w.target) : w.done });
+    });
+    state.dated.forEach(d => {
+      if(!isDatedDueToday(d)) return;
+      const promoted = d.currentPromotedSpecialId ? state.special.find(s=>s.id===d.currentPromotedSpecialId) : null;
+      result.daily.push({ label:d.text+' (recurring)', done: promoted ? !!promoted.done : false });
+    });
     state.special.filter(s=>s.addedToday===key).forEach(s => result.special.push({ label:s.text, done:s.done }));
   } else if(h){
     h.projects.forEach(p => {
